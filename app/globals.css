@@ -720,6 +720,58 @@ footer {
   background: var(--faint);
 }
 
+/* "What to learn" primer — sits above the question rows in each subtopic,
+   so a subtopic teaches before it tests. Bordered block, mono eyebrow label,
+   plain bullet list — no new colors, stays inside the ledger system. */
+.concept-block {
+  border: 1px solid var(--ink);
+  background: var(--paper2);
+  padding: 16px 18px;
+  margin-bottom: 12px;
+}
+
+.concept-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--mid);
+  margin-bottom: 10px;
+}
+
+.concept-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.concept-list li {
+  font-size: 13.5px;
+  line-height: 1.55;
+  font-weight: 500;
+  padding-left: 16px;
+  position: relative;
+}
+
+.concept-list li::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: var(--mid);
+}
+
+.concept-more {
+  display: inline-block;
+  margin-top: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+
 .q-row {
   display: flex;
   align-items: center;

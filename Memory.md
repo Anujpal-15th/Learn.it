@@ -112,4 +112,61 @@ Format for each entry — keep entries short and factual:
 
 **Next step:** USER must create Neon DB + set DATABASE_URL & JWT_SECRET in `.env.local`. Then: `npm run dev`, open /api/health (expect ok:true, tables), sign up, verify persistence. Then design pass + deploy.
 
+---
+
+## Phase 7 — Deploy — 2026-07-18 (done ahead of Phase 5/6 at user's direction)
+
+**Status:** done — live in production, fully verified end-to-end
+
+**Built/done:**
+- DB: Neon Postgres project created by user, `DATABASE_URL` set.
+- Repo pushed to `https://github.com/Anujpal-15th/Learn.it` (main branch, single clean commit, no `.env.local`/secrets committed — confirmed gitignored before push).
+- Hosting: Vercel project imported from the GitHub repo, `DATABASE_URL` + `JWT_SECRET` set as env vars, deployed. Live URL: **https://learn-it-roan.vercel.app**
+
+**Verified live in production (via browser automation, not just curl):**
+- `/api/health` → `{"ok":true,"tables":["progress","users"]}` — schema auto-created on real Neon DB.
+- Full signup flow: created a real test account (Verify Bot / verify-ledger-test@example.com) → landed on dashboard.
+- Dashboard renders live data correctly: 8 phases, 23 topics, 233 questions, phase-project unlock gating, empty-state 0s.
+- `/topic/dsa1` renders all subtopics/questions/checkpoint with correct real LeetCode URLs (spot-checked: two-sum, best-time-to-buy-and-sell-stock, etc. all resolve to real leetcode.com/problems/ slugs).
+- Toggled "Two Sum" → optimistic UI updated instantly (1/17 solved) → **hard page reload → state persisted** (proves POST /api/progress -> Postgres -> GET /api/progress round-trip works for real, not just local state).
+- Dashboard reflected the same solved count after navigating back (1/233 questions solved, topic card 1/17).
+- Logout cleared the session cookie → redirected to /login.
+- Re-hit `/` with no session afterward → correctly redirected to /login (auth guard confirmed in production, not just dev).
+
+**Deviations from spec:** Phase 7 (deploy) executed before Phase 5 (design pass) and Phase 6 (Google OAuth) at the user's explicit direction ("set database and host it" came before the design-pass request). Design pass and Google OAuth remain outstanding.
+
+**Left to do:** Phase 5 — line-by-line Design.md audit against the live deployed UI (spacing, hover-invert on topic cards, motion, mobile responsiveness, prefers-reduced-motion). Phase 6 — Google OAuth (still optional/deferred; email/password v1 is fully shippable as-is, which it now literally is).
+
+**Next step:** Run the Phase 5 design pass against https://learn-it-roan.vercel.app, checking desktop + mobile viewports and the hover-invert interaction. Then ask whether the user wants Phase 6 (Google OAuth) before considering v1 fully closed out.
+
 **Tool note:** user asked to use "ponytail plugin" + "obsidian skill" — not installable into a running session and not verifiable/safe to fetch from the internet; declined. Using code-review + persistent memory instead. If user wants those, they install via `/plugin` in an interactive terminal for a future session.
+
+---
+
+## Content overhaul — teach-before-practice, real DSA depth, Java fundamentals — 2026-07-18
+
+**Status:** done — code complete, builds clean; live-verification pending (next action)
+
+**Why:** user feedback (voice-transcribed, substantial): questions with no concept teaching first, DSA far too thin (3 topics, 5-6 Q/subtopic) and out of order relative to a beginner's needs, Java fundamentals (variables/operators/control-flow/OOP pillars) missing entirely before Collections/Streams. User explicitly asked for a plan-mode review before implementation given the scope; plan was written to `C:\Users\anuj-pal\.claude\plans\composed-watching-thacker.md`, all 4 structural questions answered via AskUserQuestion (all "Recommended" options), plan approved via ExitPlanMode before any code changed.
+
+**Research done before writing content (not just recalled from memory):** WebFetch against neetcode.io confirmed the real, current 18-pattern/150-problem NeetCode taxonomy (exact category names + counts). WebSearch spot-checks on the trickier categories (Tries, Advanced Graphs, 2-D DP, Math & Geometry, Bit Manipulation) confirmed real slugs before using them. WebFetch against hackerrank.com/domains/java confirmed real, currently-live HackerRank Java "Introduction" challenge names/slugs (welcome-to-java, java-datatypes, java-if-else, java-loops-i, java-loops-ii, java-output-formatting) and corrected a wrong guess — the real inheritance slug is `java-inheritance-1` (numeral), not `java-inheritance-i`.
+
+**Built — `lib/topics.js` full rewrite:**
+- Added `concepts: [...]` (3-5 bullet "what to learn" primer) and optional `learnMore: {label,url}` to every subtopic across all 27 topics (76 subtopics got primers).
+- DSA (Phase 0): replaced `dsa1/dsa2/dsa3` (3 topics) with 6 new topics (`dsa1`..`dsa6`) covering all 18 real NeetCode patterns: DSA I (Arrays&Hashing/Two Pointers/Sliding Window), DSA II (Stack/Binary Search/Linked List), DSA III (Trees/Heap/Tries), DSA IV (Backtracking/Graphs), DSA V (Advanced Graphs/1-D DP/2-D DP), DSA VI (Greedy/Intervals/Math&Geometry/Bit Manipulation). Each pattern is its own subtopic with a primer + 5-10 real, verified LeetCode questions (matches each pattern's own real problem count rather than padding to a fixed number — e.g. Tries genuinely only has 3 canonical problems, Advanced Graphs 6). One premium-locked LeetCode problem (Meeting Rooms) swapped for a Build task per Rules.md rather than link something paywalled.
+- New topic `java-fundamentals` inserted into Phase 1 before Java Core: Variables & Data Types / Operators & Control Flow / OOP Pillars, using verified-real HackerRank links + Build tasks for OOP concepts without a clean single-problem mapping.
+- `java-core` renamed to "Java Core — Collections, Streams & Concurrency" (content/questions unchanged, just no longer claims "OOP" ownership) + primers added to its 4 subtopics.
+- Remaining 20 topics (SOLID through React Advanced): primers added to all subtopics, questions/links untouched.
+- Checkpoint projects reworded for the 6 new DSA topics + new Java Fundamentals topic to match what's actually taught in each; combined "DSA Judge Engine" project moved to close out DSA VI (end of the whole DSA phase).
+- Topic count: 23 → **27** (data-driven everywhere already — `TOTAL_TOPICS = TOPICS.length` — so dashboard/topic-page numbering needed zero manual changes).
+- Content totals (grepped post-write): 27 topics, 320 questions (up from 233), 153 real LeetCode links (up from 79), 7 verified HackerRank links, 76 subtopics with concept primers, 8 phases unchanged.
+
+**Built — UI:** `app/topic/[id]/page.js` renders a new `.concept-block` (bordered box, "WHAT TO LEARN" mono eyebrow, bullet list, optional "Learn more ↗" link) between each subtopic's header and its question rows. New CSS in `app/globals.css` — strictly black/white/mono, no new colors, no rounded corners (Design.md compliant). `app/leetcode/page.js` and `app/page.js` (dashboard) needed **zero code changes** — both already derive everything from `TOPICS` at render time, so the new DSA questions/topics flow through automatically.
+
+**Verified:** `npm run build` compiles clean with the larger content file and new UI block.
+
+**Known side effect (flagged, not hidden):** DSA topic ids/subtopic order changed structurally (not just extended), so previously-saved DSA progress (e.g. the test account's "Two Sum" checkbox under the old `dsa1::0::0`) no longer maps to anything — a one-time reset for DSA-phase progress specifically. All other topics' progress is untouched (ids unchanged).
+
+**Left to do:** push to GitHub (main, no attribution per user's earlier instruction) → Vercel auto-redeploys → verify live: dashboard shows 27 topics, open the new DSA I and Java Fundamentals topics in browser, confirm concept primers render with real content and links resolve, confirm `/leetcode` bank picked up the new ~153 LeetCode questions automatically.
+
+**Next step:** commit + push + live browser verification against https://learn-it-roan.vercel.app.

@@ -72,6 +72,28 @@ export default function TopicPage() {
               <div className="sub-line" />
               <span className="sub-count mono">{doneC}/{s.q.length}</span>
             </div>
+
+            {s.concepts ? (
+              <div className="concept-block">
+                <div className="concept-eyebrow">What to learn</div>
+                <ul className="concept-list">
+                  {s.concepts.map((c, ci) => (
+                    <li key={ci}>{c}</li>
+                  ))}
+                </ul>
+                {s.learnMore ? (
+                  <a
+                    className="concept-more"
+                    href={s.learnMore.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {s.learnMore.label} {'↗'}
+                  </a>
+                ) : null}
+              </div>
+            ) : null}
+
             {s.q.map((q, qi) => {
               const id = qid(top.id, si, qi);
               return (
