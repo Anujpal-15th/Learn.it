@@ -286,3 +286,29 @@ Format for each entry — keep entries short and factual:
 **Left to do:** push (no attribution) → Vercel redeploy → live verification: dashboard shows "30 topics", Phase 0's Java Fundamentals/Java Core/etc. now show the two-column checklist layout, the 3 new topics (Linux & CLI, NoSQL, Kubernetes) appear in their correct phases with real content, the sidebar renders and its links jump to the right subtopic, Phase 1 (DSA) is still pure single-column question list.
 
 **Next step:** commit + push + live browser verification against https://learn-it-roan.vercel.app. Use `javascript_tool`-dispatched `.click()` for any interactive verification (per the note above — coordinate-based clicks were unreliable last session).
+
+---
+
+## SOLID/patterns expansion, real article links, phase-project review, Backend Topics page — 2026-07-19
+
+**Status:** done, code complete + builds clean; pushing + live-verifying next
+
+**Why:** user feedback, two distinct points: (1) SOLID & Design Principles was too thin — named DRY/KISS/YAGNI, UML, and "structural/behavioral patterns you forgot" as concrete examples of missing content. (2) The GeeksforGeeks `learnMore` links across the whole roadmap used `GFG(query)` — a site-search URL, not a direct article — user explicitly said these "lead to a course," not the topic itself, and asked for real article links "so people can read it and understand… this is our job." (3) Confirmed (again) they want a standalone **Backend Topics** reference page linked from the navbar — same shape as Algorithm List but for backend concepts broadly, not folded into the phase roadmap this time.
+
+**Research done (WebSearch, per-topic, not recalled):** ran a real search for every one of the 21 existing `learnMore` fields that used `GFG(...)`, plus 6 new searches for the SOLID-topic expansion content (SOLID, DRY/KISS/YAGNI, UML, Creational/Structural/Behavioral patterns) — confirming a real, direct, currently-live article URL for each before using it.
+
+**Built — `lib/topics.js`:**
+- **All 21 `learnMore` fields using `GFG(query)`** (search-link placeholders) replaced with real direct GeeksforGeeks article URLs, applied via a small one-off Node script (`fixlinks.js`, not committed) matching each field's exact query text — safe because those query strings only ever appeared in `learnMore` contexts, never in individual question links (which legitimately keep using `GFG()` as the Rules.md-sanctioned fallback for unverified practice problems). Verified 0 remaining `learnMore.*GFG(` matches after.
+- **SOLID & Design Principles fully rebuilt**: 3 subtopics → **7**. Added DRY/KISS/YAGNI, UML Basics (class diagrams, sequence diagrams, composition vs aggregation), and split the old single "Design Patterns" subtopic into three real GoF categories — **Creational** (Singleton, Factory Method, Abstract Factory, Builder, Prototype), **Structural** (Adapter, Facade, Decorator, Proxy, Composite, Bridge), **Behavioral** (Strategy, Observer, State, Command, Template Method, Chain of Responsibility). Each new subtopic has a real, verified `learnMore` article (not a search link) from the start. Checkpoint project updated to reference the fuller pattern set + a UML deliverable.
+- **`PHASE_PROJECTS` reviewed against actual current phase content** — updated 3 of 8 whose phases gained topics since they were last written: Phase 0's project now also uses a UML-documented pattern set and a bash startup script (ties in Linux/CLI); Phase 2's project now includes a MongoDB side-by-side model (ties in NoSQL); Phase 5's project now deploys to Kubernetes, not just docker-compose. The other 5 phase projects were checked and still match their phase's content — left unchanged.
+
+**Built — Backend Topics (new, separate from the roadmap):**
+- New `lib/backend-topics.js` — `BACKEND_CATEGORIES`: 58 items across 13 categories (Languages & Runtimes, Databases, Caching, Messaging & Streaming, API Design, Authentication & Security, Testing & Quality, Containers & Orchestration, CI/CD & DevOps, Cloud Platforms, Observability, Architecture Patterns, System Design Concepts). Every entry links directly to a real official-docs or well-known direct-article page (AWS docs, Kubernetes docs, MDN, OWASP, Martin Fowler, microservices.io, etc.) — deliberately NOT a `GFG(query)` search link anywhere in this file, addressing the "leads to a course" complaint structurally for all new content going forward.
+- New `app/backend-topics/page.js` — same shape as `app/algorithms/page.js`: reuses `useProgress()`, own progress namespace (`backend::<slug>`), own "N/58 known" stat, not mixed into official roadmap progress.
+- `app/page.js`: added a "Backend Topics" link to the topbar nav (placed first, before Algorithm List), per the user's explicit "top of the navbar" instruction.
+
+**Verified:** `npm run build` compiles clean (`/backend-topics` route registered, 7.34kB). SOLID topic subtopic count confirmed 7 via targeted grep (not the noisy nested-brace grep, which overcounted).
+
+**Left to do:** push (no attribution) → Vercel redeploy → live verification: SOLID topic shows all 7 subtopics with the full pattern catalog, a sampled `learnMore` link resolves to a real article (not a GFG search page), Backend Topics page loads from the navbar with 58 items across 13 categories and its own progress tracking, updated phase-project descriptions appear on the dashboard.
+
+**Next step:** commit + push + live browser verification against https://learn-it-roan.vercel.app.

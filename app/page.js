@@ -67,12 +67,15 @@ export default function Dashboard() {
           <span className="sub">{user.name || user.email}</span>
         </div>
         <div className="nav">
-          <a className="tab" href="/leetcode">
-            <span className="dot" aria-hidden="true" />
-            {stats.solved} solved
+          <a className="tab" href="/backend-topics">
+            Backend Topics
           </a>
           <a className="tab" href="/algorithms">
             Algorithm List
+          </a>
+          <a className="tab" href="/leetcode">
+            <span className="dot" aria-hidden="true" />
+            {stats.solved} solved
           </a>
           <button className="tab" onClick={handleLogout}>
             Log out
