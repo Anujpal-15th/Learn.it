@@ -630,6 +630,84 @@ footer {
   animation: rise 0.5s cubic-bezier(.16, 1, .3, 1) forwards;
 }
 
+/* Sidebar + main content split — uses the width that used to sit empty
+   beside a single centered column, without widening the page further. */
+.detail-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 40px;
+  margin-top: 24px;
+  align-items: start;
+}
+
+.detail-sidebar {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-right: 1px solid var(--faint);
+  padding-right: 20px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+
+.sidebar-label {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--mid);
+  margin-bottom: 12px;
+}
+
+.sidebar-link {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--faint);
+  color: var(--mid);
+  transition: color 0.2s;
+}
+
+.sidebar-link:hover {
+  color: var(--ink);
+}
+
+.sidebar-link .mono {
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.detail-main {
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .detail-layout {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .detail-sidebar {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    border-right: none;
+    border-bottom: 1px solid var(--faint);
+    padding: 0 0 16px;
+    margin-bottom: 24px;
+    max-height: none;
+  }
+  .sidebar-link {
+    border-bottom: none;
+    padding: 4px 10px 4px 0;
+    width: auto;
+  }
+}
+
 .back-btn {
   font-family: var(--font-mono), monospace;
   font-size: 12px;

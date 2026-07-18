@@ -258,3 +258,31 @@ Format for each entry — keep entries short and factual:
 **Note for next session:** browser-automation `left_click`-by-coordinate was unreliable during the previous session's testing (silently missed elements, no error). Dispatching a real `.click()` via `javascript_tool` on the DOM element directly was the reliable workaround — prefer that for click-based verification on this app.
 
 **Next step:** commit + push + live browser verification against https://learn-it-roan.vercel.app — confirm a Phase 2+ topic (e.g. Databases & SQL) shows the two-column layout matching the user's own worked example, checklist items toggle independently, practice questions still work, Phase 1 (DSA) pages are visually unchanged.
+
+---
+
+## Roadmap v4 — Phase 0 checklist, 3 researched topics, sidebar nav — 2026-07-19
+
+**Status:** done, code complete + builds clean; pushing + live-verifying next
+
+**Why:** user asked (and this time explicitly said "tell me what you understand, then do" — confirmed in-thread, no separate AskUserQuestion needed) for: (1) the same checklist treatment now on Phase 0 too, (2) real internet research (not memory) to check whether the roadmap has enough topics for an actual backend-engineer job, (3) missing backend topics added, in the same spirit as the Algorithm List page, (4) checkpoint projects reviewed for whatever changes, (5) "neutralize" leftover negative space on topic pages WITHOUT just widening the container again — left as my own design call.
+
+**Research done (WebSearch, not recalled from memory):** searched current (2026) backend/Java-backend roadmaps (roadmap.sh, javarevisited, scaler, and others) and cross-checked specific claims with a second round of searches. Consistent, repeated gaps across sources: **Linux/command-line & shell scripting** (assumed by every real job, taught by none of this roadmap), **NoSQL databases** (MongoDB/Redis-as-a-store, not just caching), **Kubernetes** (dominant orchestration tool in 2026, roadmap only had Docker), **raw JDBC fundamentals** (skipped straight to JPA), **Java 21 virtual threads / Project Loom** (repeatedly flagged as a 2026 interview topic, not covered by the existing concurrency subtopic).
+
+**Built — `lib/topics.js`:**
+- **Phase 0 gets the checklist treatment**: added `checklist: [...]` to all 16 existing Phase 0 subtopics (java-fundamentals 4, java-core 5 existing, solid 3, build-tools 2, git 2). `isChecklistPhase` in the topic page changed from `phase >= 2` to `phase !== 1` — Phase 1 (DSA) is now the ONLY phase that stays pure-question; everything else (Phase 0 and Phase 2-7) shows the concept checklist.
+- **3 new topics added**, each researched, fully authored (concepts + checklist + real/build-task questions + learnMore + a checkpoint project matched to its actual content):
+  - `linux-cli` "Linux & Command Line" — new 6th topic in Phase 0 (Filesystem & Permissions, Process Management & Networking, Shell Scripting).
+  - `nosql` "NoSQL Databases" — new topic in Phase 2, after JPA (Document & Key-Value Stores, SQL vs NoSQL Trade-offs).
+  - `kubernetes` "Kubernetes & Orchestration" — new topic in Phase 5, after Docker (Core Objects, Scaling & Operations).
+- **2 new subtopics added** to existing topics: `java-core` gets "Modern Java — Virtual Threads (Project Loom)" (appended as 6th subtopic; its checkpoint project mini-desc also updated to mention a virtual-thread-backed executor). `sql-db` gets "JDBC Fundamentals" (appended as 5th subtopic — raw Connection/Statement/PreparedStatement/ResultSet, explicitly framed as "what JPA/Spring Data generate for you").
+- **Full renumbering**: 27 → **30 topics**. Did this via a small Node script (`renumber.js`, one-off, not committed) matching each topic's unique `id:` and rewriting its `num:` field — safer than 20+ manual edits on a file this size. Verified the full 1-30 sequence via grep afterward, no gaps or duplicates.
+- Content totals (grepped): 30 topics, 495 questions (up from 468), 72 checklist arrays (up from 48).
+
+**Built — sidebar (the "neutralize negative space" ask):** `app/topic/[id]/page.js` now wraps the topic body in a `.detail-layout` grid — a sticky left sidebar (`.detail-sidebar`, 220px) listing every subtopic with its live progress count, linking to a `#sub-N` anchor on that subtopic's block, next to the existing main content (`.detail-main`). This is deliberately NOT just widening the container further (user explicitly said not to) — it fills the side space with a genuinely useful jump-nav instead. Collapses to a horizontal scrollable strip above the content on screens under 900px. CSS: `.detail-layout`, `.detail-sidebar`, `.sidebar-label`, `.sidebar-link`, `.detail-main` added to `globals.css`.
+
+**Verified:** `npm run build` compiles clean. Grepped content totals match expected deltas exactly (27 new questions = 3 JDBC + 3 virtual threads + 9 linux-cli + 6 nosql + 6 kubernetes).
+
+**Left to do:** push (no attribution) → Vercel redeploy → live verification: dashboard shows "30 topics", Phase 0's Java Fundamentals/Java Core/etc. now show the two-column checklist layout, the 3 new topics (Linux & CLI, NoSQL, Kubernetes) appear in their correct phases with real content, the sidebar renders and its links jump to the right subtopic, Phase 1 (DSA) is still pure single-column question list.
+
+**Next step:** commit + push + live browser verification against https://learn-it-roan.vercel.app. Use `javascript_tool`-dispatched `.click()` for any interactive verification (per the note above — coordinate-based clicks were unreliable last session).
