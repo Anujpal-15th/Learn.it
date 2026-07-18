@@ -232,4 +232,29 @@ Format for each entry — keep entries short and factual:
 
 **Left to do:** push (no attribution) → Vercel redeploy → live verification: Phase 2+ topic page shows the subtopic checkbox toggling all its questions at once while individual questions remain separately checkable; Phase 0/1 topic pages unchanged; wider layout visible; Algorithm List page reachable from the dashboard navbar and its checkboxes persist.
 
-**Next step:** commit + push + live browser verification against https://learn-it-roan.vercel.app.
+**Next step (superseded by the entry below — the subtopic-bulk-checkbox approach here turned out not to match what the user wanted):** commit + push + live browser verification against https://learn-it-roan.vercel.app.
+
+---
+
+## Checklist redesign for Phase 2+ (corrected per user re-clarification) — 2026-07-19
+
+**Status:** done, code complete + builds clean; pushing + live-verifying next
+
+**Why:** the previous session's "one bulk checkbox on the subtopic header, toggling the hidden questions underneath" did NOT match what the user wanted. They clarified explicitly (and asked me to confirm understanding before building, which I did in-thread): for Phase 2 onward, each subtopic should show a checklist of the actual CONCEPT NAMES that make up that subtopic (e.g. under SQL's "Core SQL & Joins": SELECT & WHERE, JOIN Types, GROUP BY & HAVING, Subqueries, Aggregate Functions, Window Functions, ORDER BY, UNION/INTERSECT/EXCEPT) — replacing the practice questions as primary content, not bulk-toggling them. Confirmed via AskUserQuestion: keep the existing practice questions too, in a two-column layout (checklist left, questions right), using the width freed up by the earlier layout-widening pass.
+
+**Built — `lib/topics.js`:**
+- Added `checklist: [...]` (array of short concept-name strings) to all **48** Phase 2–7 subtopics (sql-db 4, jpa 3, spring 4, rest 4, security 4, testing 3, cache-mq 2, docker 2, cicd 3, sysdesign 3, cloud 2, html-css 3, js-dom 3, typescript 2, react-fundamentals 3, react-advanced 3). 356 checklist items total. Existing `concepts` (prose "what to learn" bullets), `learnMore`, and `q` (practice questions) arrays on these subtopics are untouched — checklist is additive.
+- Removed `subtopicProgress` (the now-superseded bulk-toggle helper) and replaced it with `checklistKey(topicId, si, ci)` + `checklistProgress(top, si, progress)` — a distinct progress-key namespace (`topicId::si::concept::ci`) so checklist items can never collide with question qids even at the same subtopic index.
+- Phase 0/1 (Language & Foundations, DSA) subtopics were **not touched** — no checklist field, unchanged behavior.
+
+**Built — `components/useProgress.js`:** removed `toggleMany` (no longer needed — checklist items use the same single-item `toggle(id)` as questions). Kept `commit()` (still a clean split of "compute next state" vs "persist+rollback", one caller now).
+
+**Built — `app/topic/[id]/page.js`:** for `phase >= 2`, each subtopic renders: sub-head (title + count, now reflecting checklist completion) → concept-primer block (unchanged) → a `.checklist-columns` two-column grid: left "Topics to learn" (new checklist, checkable), right "Practice" (existing `QuestionRow` list, unchanged, still individually checkable). Phase 0/1 rendering is unchanged single-column questions.
+
+**Built — CSS:** removed dead `.sub-head-checkable`/`.sub-check-done`. Added `.checklist-columns` (grid, collapses to 1 column under 900px) and `.col-label`.
+
+**Verified:** `npm run build` compiles clean. Grepped: 48 checklist arrays, 356 total items, zero remaining references to `toggleMany`/`subtopicProgress` anywhere.
+
+**Note for next session:** browser-automation `left_click`-by-coordinate was unreliable during the previous session's testing (silently missed elements, no error). Dispatching a real `.click()` via `javascript_tool` on the DOM element directly was the reliable workaround — prefer that for click-based verification on this app.
+
+**Next step:** commit + push + live browser verification against https://learn-it-roan.vercel.app — confirm a Phase 2+ topic (e.g. Databases & SQL) shows the two-column layout matching the user's own worked example, checklist items toggle independently, practice questions still work, Phase 1 (DSA) pages are visually unchanged.

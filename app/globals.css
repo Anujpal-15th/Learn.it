@@ -701,23 +701,31 @@ footer {
   margin-bottom: 18px;
 }
 
-/* Phase 2+ topic pages: the whole subtopic header is one big checkbox that
-   marks every question in it done/undone at once. */
-.sub-head-checkable {
-  cursor: pointer;
-  padding: 10px 12px;
-  margin: 0 -12px 18px;
-  border: 1px solid var(--faint);
-  transition: border-color 0.2s;
+/* Phase 2+ topic pages: concept checklist (primary) on the left, existing
+   practice questions (reference) on the right. Collapses to one column,
+   checklist first, on narrow screens. */
+.checklist-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
 }
 
-.sub-head-checkable:hover {
-  border-color: var(--ink);
+@media (max-width: 900px) {
+  .checklist-columns {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
 }
 
-.sub-check-done {
-  background: var(--ink);
-  color: var(--paper);
+.col-label {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--mid);
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
 }
 
 .sub-title {

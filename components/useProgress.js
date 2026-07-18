@@ -61,8 +61,7 @@ export function useProgress() {
   }
 
   // Applies nextProgress/nextGrowth optimistically, persists them, and rolls
-  // back to prevProgress/prevGrowth on failure. Shared by toggle (one id) and
-  // toggleMany (a whole subtopic's worth of ids at once).
+  // back to prevProgress/prevGrowth on failure.
   async function commit(nextProgress, nextGrowth, prevProgress, prevGrowth) {
     setProgress(nextProgress);
     setGrowth(nextGrowth);
@@ -99,31 +98,5 @@ export function useProgress() {
     await commit(nextProgress, nextGrowth, prevProgress, prevGrowth);
   }
 
-  // Marks every id in `ids` done (or, if they're already all done, marks
-  // them all undone) in a single save — the subtopic-level "mark topic
-  // learned" checkbox on Phase 2+ topic pages.
-  async function toggleMany(ids) {
-    const prevProgress = latest.current.progress;
-    const prevGrowth = latest.current.growth;
-    const allDone = ids.every((id) => !!prevProgress[id]);
-    const setTo = !allDone;
-
-    const nextProgress = { ...prevProgress };
-    let delta = 0;
-    ids.forEach((id) => {
-      const wasDone = !!prevProgress[id];
-      if (wasDone === setTo) return;
-      delta += setTo ? 1 : -1;
-      if (setTo) nextProgress[id] = true;
-      else delete nextProgress[id];
-    });
-
-    const key = todayKey();
-    const nextGrowth = { ...prevGrowth };
-    nextGrowth[key] = Math.max(0, (nextGrowth[key] || 0) + delta);
-
-    await commit(nextProgress, nextGrowth, prevProgress, prevGrowth);
-  }
-
-  return { user, progress, growth, loading, error, isDone, toggle, toggleMany };
+  return { user, progress, growth, loading, error, isDone, toggle };
 }
