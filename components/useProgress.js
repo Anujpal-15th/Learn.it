@@ -27,13 +27,19 @@ export function useProgress() {
     let active = true;
     (async () => {
       try {
-        const meRes = await fetch('/api/auth/me');
+        // Fire both requests together — /api/progress re-derives the user
+        // from the same session cookie independently, so there's no need to
+        // wait for /api/auth/me to finish first. This roughly halves the
+        // network wait on every page load.
+        const [meRes, progRes] = await Promise.all([
+          fetch('/api/auth/me'),
+          fetch('/api/progress'),
+        ]);
         if (!meRes.ok) {
           router.replace('/login');
           return;
         }
         const me = await meRes.json();
-        const progRes = await fetch('/api/progress');
         const data = progRes.ok ? await progRes.json() : { progress: {}, growth: {} };
         if (!active) return;
         setUser(me.user);
@@ -54,17 +60,10 @@ export function useProgress() {
     return !!progress[id];
   }
 
-  async function toggle(id) {
-    const wasDone = !!latest.current.progress[id];
-    const nextProgress = { ...latest.current.progress, [id]: !wasDone };
-    if (wasDone) delete nextProgress[id];
-
-    const key = todayKey();
-    const delta = wasDone ? -1 : 1;
-    const nextGrowth = { ...latest.current.growth };
-    nextGrowth[key] = Math.max(0, (nextGrowth[key] || 0) + delta);
-
-    // Optimistic UI.
+  // Applies nextProgress/nextGrowth optimistically, persists them, and rolls
+  // back to prevProgress/prevGrowth on failure. Shared by toggle (one id) and
+  // toggleMany (a whole subtopic's worth of ids at once).
+  async function commit(nextProgress, nextGrowth, prevProgress, prevGrowth) {
     setProgress(nextProgress);
     setGrowth(nextGrowth);
     latest.current = { progress: nextProgress, growth: nextGrowth };
@@ -78,18 +77,53 @@ export function useProgress() {
       });
       if (!res.ok) throw new Error('save failed');
     } catch {
-      // Roll back on failure so the UI never lies about what's saved.
-      const revertProgress = { ...latest.current.progress };
-      if (wasDone) revertProgress[id] = true;
-      else delete revertProgress[id];
-      const revertGrowth = { ...latest.current.growth };
-      revertGrowth[key] = Math.max(0, (revertGrowth[key] || 0) - delta);
-      setProgress(revertProgress);
-      setGrowth(revertGrowth);
-      latest.current = { progress: revertProgress, growth: revertGrowth };
+      setProgress(prevProgress);
+      setGrowth(prevGrowth);
+      latest.current = { progress: prevProgress, growth: prevGrowth };
       setError('Could not save — check your connection and try again.');
     }
   }
 
-  return { user, progress, growth, loading, error, isDone, toggle };
+  async function toggle(id) {
+    const prevProgress = latest.current.progress;
+    const prevGrowth = latest.current.growth;
+    const wasDone = !!prevProgress[id];
+    const nextProgress = { ...prevProgress, [id]: !wasDone };
+    if (wasDone) delete nextProgress[id];
+
+    const key = todayKey();
+    const delta = wasDone ? -1 : 1;
+    const nextGrowth = { ...prevGrowth };
+    nextGrowth[key] = Math.max(0, (nextGrowth[key] || 0) + delta);
+
+    await commit(nextProgress, nextGrowth, prevProgress, prevGrowth);
+  }
+
+  // Marks every id in `ids` done (or, if they're already all done, marks
+  // them all undone) in a single save — the subtopic-level "mark topic
+  // learned" checkbox on Phase 2+ topic pages.
+  async function toggleMany(ids) {
+    const prevProgress = latest.current.progress;
+    const prevGrowth = latest.current.growth;
+    const allDone = ids.every((id) => !!prevProgress[id]);
+    const setTo = !allDone;
+
+    const nextProgress = { ...prevProgress };
+    let delta = 0;
+    ids.forEach((id) => {
+      const wasDone = !!prevProgress[id];
+      if (wasDone === setTo) return;
+      delta += setTo ? 1 : -1;
+      if (setTo) nextProgress[id] = true;
+      else delete nextProgress[id];
+    });
+
+    const key = todayKey();
+    const nextGrowth = { ...prevGrowth };
+    nextGrowth[key] = Math.max(0, (nextGrowth[key] || 0) + delta);
+
+    await commit(nextProgress, nextGrowth, prevProgress, prevGrowth);
+  }
+
+  return { user, progress, growth, loading, error, isDone, toggle, toggleMany };
 }

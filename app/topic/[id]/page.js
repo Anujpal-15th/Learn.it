@@ -5,17 +5,27 @@
 // shared useProgress hook.
 
 import { useParams, useRouter } from 'next/navigation';
-import { TOPICS, qid, topicSolved } from '@/lib/topics';
+import { TOPICS, qid, topicSolved, subtopicProgress } from '@/lib/topics';
 import { useProgress } from '@/components/useProgress';
 import QuestionRow from '@/components/QuestionRow';
 
 const TOTAL_TOPICS = TOPICS.length;
 
+// Phase 0 (Language & Foundations) and Phase 1 (DSA) are genuine
+// solve-this-problem practice — kept fully question-by-question checkable.
+// Phase 2 onward is framework/infra/frontend material where a beginner
+// mainly needs "have I learned this concept yet?" — those topics get one
+// checkbox per subtopic instead, with the practice items still listed below
+// as reference (and still individually checkable, if wanted).
+function isChecklistPhase(phase) {
+  return phase >= 2;
+}
+
 export default function TopicPage() {
   const params = useParams();
   const router = useRouter();
   const top = TOPICS.find((t) => t.id === params.id);
-  const { progress, loading, error, isDone, toggle } = useProgress();
+  const { progress, loading, error, isDone, toggle, toggleMany } = useProgress();
 
   if (loading) {
     return (
@@ -76,9 +86,33 @@ export default function TopicPage() {
 
       {top.subtopics.map((s, si) => {
         const doneC = s.q.filter((_, qi) => isDone(qid(top.id, si, qi))).length;
+        const checklist = isChecklistPhase(top.phase);
+        const { allDone } = subtopicProgress(top, si, progress);
+        const subIds = s.q.map((_, qi) => qid(top.id, si, qi));
+
         return (
           <div className="sub-block" key={si}>
-            <div className="sub-head">
+            <div
+              className={'sub-head' + (checklist ? ' sub-head-checkable' : '')}
+              onClick={checklist ? () => toggleMany(subIds) : undefined}
+              role={checklist ? 'button' : undefined}
+              tabIndex={checklist ? 0 : undefined}
+              onKeyDown={
+                checklist
+                  ? (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleMany(subIds);
+                      }
+                    }
+                  : undefined
+              }
+            >
+              {checklist ? (
+                <div className={'q-check' + (allDone ? ' sub-check-done' : '')}>
+                  {allDone ? '✓' : ''}
+                </div>
+              ) : null}
               <span className="sub-title">{s.title}</span>
               <div className="sub-line" />
               <span className="sub-count mono">{doneC}/{s.q.length}</span>

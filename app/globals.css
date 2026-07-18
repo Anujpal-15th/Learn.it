@@ -1,9 +1,9 @@
 /* globals.css — The Ledger design system.
    Strict black-and-white, grid-based, dossier/ledger aesthetic.
    No color accents, no gradients, no border-radius anywhere.
-   Design tokens and rules come straight from Design.md. */
-
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+   Design tokens and rules come straight from Design.md.
+   Fonts are loaded via next/font in app/layout.js (self-hosted, no
+   render-blocking external request) and exposed here as CSS variables. */
 
 :root {
   --ink: #0a0a0a;      /* primary text, borders, filled states */
@@ -26,7 +26,7 @@ html {
 body {
   background: var(--paper);
   color: var(--ink);
-  font-family: 'Archivo', sans-serif;
+  font-family: var(--font-archivo), sans-serif;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
   /* Persistent faint background grid, fixed on scroll. */
@@ -43,7 +43,7 @@ body {
 }
 
 .mono {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
 }
 
 a {
@@ -52,7 +52,7 @@ a {
 
 /* --- Phase 1 placeholder homepage --- */
 .boot {
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 120px 32px;
   opacity: 0;
@@ -68,7 +68,7 @@ a {
 }
 
 .boot .eyebrow {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 11px;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -87,7 +87,7 @@ a {
 }
 
 .boot h1 {
-  font-family: 'Archivo Black', sans-serif;
+  font-family: var(--font-archivo-black), sans-serif;
   font-size: clamp(38px, 6.4vw, 88px);
   line-height: 0.92;
   letter-spacing: -2px;
@@ -116,7 +116,7 @@ a {
   display: inline-flex;
   gap: 14px;
   align-items: center;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 12px;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -156,13 +156,13 @@ a {
 }
 
 .topbar .brand .mark {
-  font-family: 'Archivo Black', sans-serif;
+  font-family: var(--font-archivo-black), sans-serif;
   font-size: 20px;
   letter-spacing: -0.5px;
 }
 
 .topbar .brand .sub {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -176,7 +176,7 @@ a {
 }
 
 .tab {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 11px;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -211,7 +211,7 @@ a {
 /* --- Hero + stat strip --- */
 .hero {
   padding: 84px 32px 60px;
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 0 auto;
   opacity: 0;
   transform: translateY(24px);
@@ -219,7 +219,7 @@ a {
 }
 
 .eyebrow {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 11px;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -238,7 +238,7 @@ a {
 }
 
 h1.title {
-  font-family: 'Archivo Black', sans-serif;
+  font-family: var(--font-archivo-black), sans-serif;
   font-size: clamp(38px, 6.4vw, 88px);
   line-height: 0.92;
   letter-spacing: -2px;
@@ -277,13 +277,13 @@ h1.title .out {
 }
 
 .ledger .num {
-  font-family: 'Archivo Black', sans-serif;
+  font-family: var(--font-archivo-black), sans-serif;
   font-size: 32px;
   letter-spacing: -1px;
 }
 
 .ledger .lbl {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 1.5px;
@@ -302,13 +302,13 @@ h1.title .out {
 
 /* --- Daily growth grid --- */
 .growth {
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 0 32px 60px;
 }
 
 .growth h3 {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -336,7 +336,7 @@ h1.title .out {
 
 /* --- Section label --- */
 .section-label {
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 0 auto 8px;
   padding: 0 32px;
   display: flex;
@@ -351,7 +351,7 @@ h1.title .out {
 }
 
 .section-label span {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 12px;
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -359,7 +359,7 @@ h1.title .out {
 
 /* --- Phase + topic grid --- */
 .phase {
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 0 32px 10px;
 }
@@ -372,13 +372,13 @@ h1.title .out {
 }
 
 .phase-num {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 13px;
   color: var(--mid);
 }
 
 .phase-title {
-  font-family: 'Archivo Black', sans-serif;
+  font-family: var(--font-archivo-black), sans-serif;
   font-size: 22px;
   text-transform: uppercase;
   letter-spacing: -0.5px;
@@ -457,14 +457,14 @@ h1.title .out {
 }
 
 .cnum {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 12px;
   color: var(--mid);
   transition: color 0.25s;
 }
 
 .ctitle {
-  font-family: 'Archivo', sans-serif;
+  font-family: var(--font-archivo), sans-serif;
   font-weight: 800;
   font-size: 18px;
   margin-top: 10px;
@@ -474,7 +474,7 @@ h1.title .out {
 }
 
 .cmeta {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 11px;
   color: var(--mid);
   margin-top: 14px;
@@ -503,7 +503,7 @@ h1.title .out {
 }
 
 .ctag {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 10px;
   transition: color 0.25s;
 }
@@ -529,7 +529,7 @@ h1.title .out {
 }
 
 .proj-eyebrow {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -541,7 +541,7 @@ h1.title .out {
 }
 
 .proj-title {
-  font-family: 'Archivo Black', sans-serif;
+  font-family: var(--font-archivo-black), sans-serif;
   font-size: 22px;
   margin-top: 12px;
   text-transform: uppercase;
@@ -551,7 +551,7 @@ h1.title .out {
 }
 
 .proj-desc {
-  font-family: 'Archivo', sans-serif;
+  font-family: var(--font-archivo), sans-serif;
   font-size: 14px;
   color: var(--mid);
   margin-top: 8px;
@@ -562,7 +562,7 @@ h1.title .out {
 
 /* --- Capstone --- */
 .capstone {
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 72px auto 90px;
   padding: 0 32px;
 }
@@ -586,7 +586,7 @@ h1.title .out {
 }
 
 .capstone-eyebrow {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 11px;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -594,7 +594,7 @@ h1.title .out {
 }
 
 .capstone-title {
-  font-family: 'Archivo Black', sans-serif;
+  font-family: var(--font-archivo-black), sans-serif;
   font-size: clamp(26px, 4vw, 42px);
   text-transform: uppercase;
   margin: 14px 0;
@@ -614,7 +614,7 @@ footer {
   border-top: 1.5px solid var(--ink);
   padding: 28px 32px;
   text-align: center;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 11px;
   color: var(--mid);
   letter-spacing: 1px;
@@ -622,7 +622,7 @@ footer {
 
 /* --- Topic detail + LeetCode bank --- */
 .detail {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 40px 32px 100px;
   opacity: 0;
@@ -631,7 +631,7 @@ footer {
 }
 
 .back-btn {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 12px;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -658,13 +658,13 @@ footer {
 }
 
 .detail-num {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   color: var(--mid);
   font-size: 13px;
 }
 
 .detail-title {
-  font-family: 'Archivo Black', sans-serif;
+  font-family: var(--font-archivo-black), sans-serif;
   font-size: clamp(28px, 4.6vw, 48px);
   text-transform: uppercase;
   letter-spacing: -1px;
@@ -701,15 +701,34 @@ footer {
   margin-bottom: 18px;
 }
 
+/* Phase 2+ topic pages: the whole subtopic header is one big checkbox that
+   marks every question in it done/undone at once. */
+.sub-head-checkable {
+  cursor: pointer;
+  padding: 10px 12px;
+  margin: 0 -12px 18px;
+  border: 1px solid var(--faint);
+  transition: border-color 0.2s;
+}
+
+.sub-head-checkable:hover {
+  border-color: var(--ink);
+}
+
+.sub-check-done {
+  background: var(--ink);
+  color: var(--paper);
+}
+
 .sub-title {
-  font-family: 'Archivo', sans-serif;
+  font-family: var(--font-archivo), sans-serif;
   font-weight: 800;
   font-size: 17px;
   text-transform: uppercase;
 }
 
 .sub-count {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 11px;
   color: var(--mid);
 }
@@ -731,7 +750,7 @@ footer {
 }
 
 .concept-eyebrow {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 1.5px;
@@ -764,7 +783,7 @@ footer {
 .concept-more {
   display: inline-block;
   margin-top: 12px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 11px;
   letter-spacing: 0.5px;
   text-decoration: underline;
@@ -835,8 +854,37 @@ footer {
   text-decoration-style: solid;
 }
 
+/* Algorithm List page: a muted description line under the algorithm name,
+   and a small "Learn" link in place of the platform tag. */
+.algo-desc {
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--mid);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.q-row.done .algo-desc {
+  color: var(--faint);
+}
+
+.algo-link {
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.algo-link:hover {
+  text-decoration-style: solid;
+}
+
 .q-plat {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 10px;
   color: var(--mid);
   text-transform: uppercase;
@@ -845,7 +893,7 @@ footer {
 }
 
 .diff {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 10px;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -883,7 +931,7 @@ footer {
 }
 
 .mini-proj-flag {
-  font-family: 'Archivo Black', sans-serif;
+  font-family: var(--font-archivo-black), sans-serif;
   font-size: 11px;
   text-transform: uppercase;
   background: var(--ink);
@@ -914,7 +962,7 @@ footer {
 
 /* Group header on the LeetCode bank page. */
 .bank-group-title {
-  font-family: 'Archivo Black', sans-serif;
+  font-family: var(--font-archivo-black), sans-serif;
   font-size: 18px;
   text-transform: uppercase;
   letter-spacing: -0.5px;
@@ -948,13 +996,13 @@ footer {
 }
 
 .auth-brand .mark {
-  font-family: 'Archivo Black', sans-serif;
+  font-family: var(--font-archivo-black), sans-serif;
   font-size: 20px;
   letter-spacing: -0.5px;
 }
 
 .auth-brand .sub {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -962,7 +1010,7 @@ footer {
 }
 
 .auth-title {
-  font-family: 'Archivo Black', sans-serif;
+  font-family: var(--font-archivo-black), sans-serif;
   font-size: 30px;
   text-transform: uppercase;
   letter-spacing: -1px;
@@ -982,7 +1030,7 @@ footer {
 
 .field label {
   display: block;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 1.5px;
@@ -995,7 +1043,7 @@ footer {
   border: 1.5px solid var(--ink);
   background: var(--paper2);
   color: var(--ink);
-  font-family: 'Archivo', sans-serif;
+  font-family: var(--font-archivo), sans-serif;
   font-size: 15px;
   padding: 12px 14px;
   outline: none;
@@ -1014,7 +1062,7 @@ footer {
   border: 1.5px solid var(--ink);
   background: var(--ink);
   color: var(--paper);
-  font-family: 'Archivo', sans-serif;
+  font-family: var(--font-archivo), sans-serif;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 1px;

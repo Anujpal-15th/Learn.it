@@ -196,3 +196,40 @@ Format for each entry — keep entries short and factual:
 **Left to do:** push to GitHub (no attribution, per standing instruction) → Vercel auto-redeploys → live browser verification: dashboard shows "27 topics / 468 questions", Phase 0 is now Language & Foundations with Phase 1 DSA, new subtopics (JVM Internals, Enums/var/Records, Spring AOP, Networking Foundations, SQLi/XSS/CSRF, Observability, Resilience/CAP, DB Ops) render with primers + working links, phase/topic-level "Learn more" links appear and resolve, `/leetcode` bank auto-picks up the ~260 links with zero code changes (same as last time — it derives from TOPICS at render time).
 
 **Next step:** commit + push + live verification against https://learn-it-roan.vercel.app.
+
+---
+
+## UX pass: checklist-mode topics, perf, layout width, Algorithm List — 2026-07-18
+
+**Status:** done, code complete + builds clean; pushing + live-verifying next
+
+**Why:** user feedback: (1) Phase 2+ topics show a flat pile of individually-checkable "Build task" questions, but the user doesn't know which concepts to learn step by step — they want a checkbox per subtopic (concept), not per exercise. (2) page load felt slow. (3) large empty margins on wide screens. (4) wanted a navbar-accessible "Algorithm List" of named algorithms (Huffman etc.), separate from the DSA phase's pattern topics.
+
+**Interpretation locked in (stated to user, not yet corrected):** Phase 0 (Language & Foundations) and Phase 1 (DSA) keep exact per-question checkboxes — those are genuine solve-a-problem practice. Phase 2 onward (Data Layer through Frontend) gets a checkbox on the subtopic header itself; the underlying questions stay visible below as reference and remain individually checkable too (not removed) since the user said questions could stay, just not be the primary interaction.
+
+**Built — checklist-mode subtopics (Phase 2+):**
+- `lib/topics.js`: added `subtopicProgress(top, si, progress)` — {c,t,allDone} for one subtopic. Deliberately did NOT introduce a new progress-key namespace or change `topicSolved`/`totalQuestions` counting — avoided a real correctness trap (a separate subtopic-level key alongside the existing per-question keys would let solvedCount() exceed totalQuestions(), since e.g. sql-db's "Core SQL & Joins" subtopic has real LeetCode questions also reachable via the `/leetcode` bank page, which stays fully question-level everywhere regardless of a topic's checklist mode).
+- `components/useProgress.js`: refactored the save+rollback logic in `toggle` into a shared `commit()` helper, then added `toggleMany(ids)` — flips a whole subtopic's question ids to all-done (or all-undone if already all done) in one optimistic update + one POST, reusing the exact same qid scheme. No new progress key format.
+- `app/topic/[id]/page.js`: `isChecklistPhase(phase) = phase >= 2`. For those topics, the `.sub-head` becomes a big clickable checkbox (calls `toggleMany` with that subtopic's question ids); its checked state reflects `subtopicProgress(...).allDone`. Phase 0/1 rendering is byte-for-byte unchanged.
+- New CSS: `.sub-head-checkable`, `.sub-check-done` in `app/globals.css`.
+- Dashboard and `/leetcode` bank needed **zero changes** — both already read `topicSolved`/question-level progress directly, which is untouched.
+
+**Built — performance:**
+- Replaced the render-blocking `@import url(fonts.googleapis.com/...)` in `globals.css` with `next/font/google` (Archivo, Archivo_Black, JetBrains_Mono) in `app/layout.js`, exposed as CSS variables (`--font-archivo`, `--font-archivo-black`, `--font-mono`) and referenced everywhere in globals.css via `var(...)`. Fonts are now self-hosted/downloaded at build time — no external network request blocking first paint. Verified: page HTML now has zero references to `fonts.googleapis.com`; `<html>` carries the next/font-generated variable classes.
+- `components/useProgress.js`: the auth-check (`/api/auth/me`) and progress fetch (`/api/progress`) were sequential awaits (two round-trips before any content could render); changed to `Promise.all([...])` since `/api/progress` already re-derives the user from the same cookie independently — roughly halves the network wait on every authenticated page load.
+- `app/page.js` (dashboard) had its own **duplicate** copy of that same sequential fetch logic; replaced it entirely with the shared `useProgress()` hook (removed ~20 duplicate lines, fixed the same perf issue there for free, Ponytail: don't duplicate).
+- Did NOT attempt a bigger fix (e.g. splitting `lib/topics.js` out of the client bundle into a server-fetched shape) — current "First Load JS" per page is ~90-126kB, not unusually large; flagged as a possible future lever if load still feels slow, but not attempted this pass given the risk/complexity of restructuring the client-component data flow.
+- Noted but NOT fixable from application code: Neon's free tier autosuspends the DB after idle, so the very first request after a period of inactivity can be slow (cold start) — this is a hosting-tier constraint, not a bug in the app.
+
+**Built — layout width:** `app/globals.css` — widened the main content containers (`.hero`, `.growth`, `.section-label`, `.phase`, `.capstone`, plus the placeholder `.boot`) from `max-width:1200px` to `1600px`, and `.detail` (topic/leetcode/algorithms pages) from `1000px` to `1200px`. Left `.auth-card` (420px, a login/signup form) untouched — narrow is correct there. **Deviation from Design.md** (which specifies "~1200px" explicitly) — done at the user's direct, explicit instruction ("utilize it better"), not a silent substitution.
+
+**Built — Algorithm List:**
+- New `lib/algorithms.js` — `ALGO_CATEGORIES`: 67 named algorithms across 12 categories (Sorting, Searching, Graph Traversal & Shortest Path, MST & Connectivity, String Matching, DP Techniques, Greedy, Backtracking, Divide & Conquer, Number Theory & Math, Bit Manipulation Tricks, Compression & Hashing). Each entry: name + one-line description + a GeeksforGeeks learn-link (generated, not hand-verified per-link — GFG's site search is stable enough that a search-query URL degrades gracefully even if a specific article doesn't exist, consistent with Rules.md's fallback guidance for uncertain links).
+- New `app/algorithms/page.js` — reuses `useProgress()` (fully generic hook) with progress keys namespaced `algo::<slug>` so they can never collide with topic/subtopic qids in the same progress blob. Self-contained progress/stat display (own "N/67 known" bar), intentionally NOT mixed into the dashboard's official "27 topics / N questions" stats, to avoid conflating a reference glossary with real roadmap progress.
+- `app/page.js`: added an "Algorithm List" link to the topbar nav, next to the LeetCode-bank link and logout button.
+
+**Verified:** `npm run build` compiles clean (new route `/algorithms` registered, 6.48kB). Local dev smoke test: all routes (`/`, `/algorithms`, `/topic/dsa1`, `/topic/spring`, `/leetcode`) serve 200. Confirmed via curl that the served HTML has zero `fonts.googleapis.com` references and the `<html>` tag carries next/font's generated variable classes.
+
+**Left to do:** push (no attribution) → Vercel redeploy → live verification: Phase 2+ topic page shows the subtopic checkbox toggling all its questions at once while individual questions remain separately checkable; Phase 0/1 topic pages unchanged; wider layout visible; Algorithm List page reachable from the dashboard navbar and its checkboxes persist.
+
+**Next step:** commit + push + live browser verification against https://learn-it-roan.vercel.app.

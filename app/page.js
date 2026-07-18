@@ -4,7 +4,7 @@
 // strip, the daily activity grid, and every phase -> topic card. Read-only:
 // toggling questions happens on the topic detail page (Phase 4).
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   TOPICS,
@@ -16,41 +16,13 @@ import {
   topicSolved,
   topicComplete,
 } from '@/lib/topics';
+import { useProgress } from '@/components/useProgress';
 
 const TOTAL_TOPICS = TOPICS.length;
 
 export default function Dashboard() {
   const router = useRouter();
-  const [user, setUser] = useState(null);
-  const [progress, setProgress] = useState({});
-  const [growth, setGrowth] = useState({});
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      try {
-        const meRes = await fetch('/api/auth/me');
-        if (!meRes.ok) {
-          router.replace('/login');
-          return;
-        }
-        const me = await meRes.json();
-        const progRes = await fetch('/api/progress');
-        const prog = progRes.ok ? await progRes.json() : { progress: {}, growth: {} };
-        if (!active) return;
-        setUser(me.user);
-        setProgress(prog.progress || {});
-        setGrowth(prog.growth || {});
-        setLoading(false);
-      } catch {
-        router.replace('/login');
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, [router]);
+  const { user, progress, growth, loading } = useProgress();
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -98,6 +70,9 @@ export default function Dashboard() {
           <a className="tab" href="/leetcode">
             <span className="dot" aria-hidden="true" />
             {stats.solved} solved
+          </a>
+          <a className="tab" href="/algorithms">
+            Algorithm List
           </a>
           <button className="tab" onClick={handleLogout}>
             Log out
