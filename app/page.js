@@ -167,6 +167,17 @@ export default function Dashboard() {
                 <span className="phase-title">{ph.name}</span>
               </div>
               <div className="phase-desc">{ph.desc}</div>
+              {ph.learnMore ? (
+                <a
+                  className="concept-more"
+                  href={ph.learnMore.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ marginBottom: 18, display: 'inline-block' }}
+                >
+                  {ph.learnMore.label} {'↗'}
+                </a>
+              ) : null}
 
               <div className="topic-grid">
                 {phaseTopics.map((top) => {

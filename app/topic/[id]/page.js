@@ -54,6 +54,17 @@ export default function TopicPage() {
         <div className="detail-num mono">TOPIC {numStr} / {TOTAL_TOPICS}</div>
         <div className="detail-title">{top.title}</div>
         <div className="detail-sub">{top.sub}</div>
+        {top.learnMore ? (
+          <a
+            className="concept-more"
+            href={top.learnMore.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ marginTop: 10, display: 'inline-block' }}
+          >
+            {top.learnMore.label} {'↗'}
+          </a>
+        ) : null}
         <div className="detail-progress">
           <div className="bar-bg">
             <div className="bar-fill" style={{ width: pct + '%' }} />
