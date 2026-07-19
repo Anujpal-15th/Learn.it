@@ -1,20 +1,20 @@
-import { Archivo, Archivo_Black, JetBrains_Mono } from 'next/font/google';
+import { Sora, Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 
-// Self-hosted via next/font — downloaded and served at build time, no
-// render-blocking external @import request (this was the biggest loading-time
-// fix: the old globals.css pulled all three families from Google's CDN on
-// every page load before anything could render).
-const archivo = Archivo({
+// New design system (v2): Sora for display/headings, Inter for body/UI —
+// the professional-product pairing (Linear/Vercel/Raycast-style), replacing
+// the earlier condensed-display/mono-heavy "dossier" look. Self-hosted via
+// next/font — no render-blocking external request.
+const sora = Sora({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800', '900'],
-  variable: '--font-archivo',
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-display',
   display: 'swap',
 });
-const archivoBlack = Archivo_Black({
+const inter = Inter({
   subsets: ['latin'],
-  weight: '400',
-  variable: '--font-archivo-black',
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-body',
   display: 'swap',
 });
 const jetbrainsMono = JetBrains_Mono({
@@ -47,7 +47,7 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${archivo.variable} ${archivoBlack.variable} ${jetbrainsMono.variable}`}
+      className={`${sora.variable} ${inter.variable} ${jetbrainsMono.variable}`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />

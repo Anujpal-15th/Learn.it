@@ -5,6 +5,7 @@
 // toggling questions happens on the topic detail page (Phase 4).
 
 import { useMemo } from 'react';
+import { motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
 import {
   TOPICS,
@@ -20,6 +21,15 @@ import { useProgress } from '@/components/useProgress';
 import ThemeToggle from '@/components/ThemeToggle';
 
 const TOTAL_TOPICS = TOPICS.length;
+
+const gridVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.05 } },
+};
+const cardVariants = {
+  hidden: { opacity: 0, y: 14 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] } },
+};
 
 export default function Dashboard() {
   const router = useRouter();
@@ -91,7 +101,12 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <section className="hero">
+      <motion.section
+        className="hero"
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      >
         <div className="eyebrow">
           8 phases · {TOTAL_TOPICS} topics · dsa-to-deployment · full-stack java track
         </div>
@@ -125,7 +140,7 @@ export default function Dashboard() {
             <div className="lbl">Overall progress</div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       <div className="growth">
         <h3>Daily growth — activity ledger</h3>
@@ -165,15 +180,25 @@ export default function Dashboard() {
                 </a>
               ) : null}
 
-              <div className="topic-grid">
+              <motion.div
+                className="topic-grid"
+                variants={gridVariants}
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, margin: '-40px' }}
+              >
                 {phaseTopics.map((top) => {
                   const { c, t } = topicSolved(top, progress);
                   const pct = t ? Math.round((c / t) * 100) : 0;
                   const complete = topicComplete(top, progress);
                   return (
-                    <div
+                    <motion.div
                       className="card"
                       key={top.id}
+                      variants={cardVariants}
+                      whileHover={{ y: -4 }}
+                      whileTap={{ scale: 0.97 }}
+                      transition={{ type: 'spring', stiffness: 350, damping: 26 }}
                       onClick={() => router.push('/topic/' + top.id)}
                       role="button"
                       tabIndex={0}
@@ -187,7 +212,7 @@ export default function Dashboard() {
                       <div>
                         <div className="cnum">
                           {String(top.num).padStart(2, '0')} / {TOTAL_TOPICS}
-                          {complete ? ' · CLEARED' : ''}
+                          {complete ? ' · Cleared' : ''}
                         </div>
                         <div className="ctitle">{top.title}</div>
                         <div className="cmeta">
@@ -202,20 +227,24 @@ export default function Dashboard() {
                           <span className="ctag">{c}/{t}</span>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
 
                 {pp ? (
-                  <div className="proj-card" style={{ opacity: phaseDone ? 1 : 0.55 }}>
+                  <motion.div
+                    className="proj-card"
+                    variants={cardVariants}
+                    style={{ opacity: phaseDone ? 1 : 0.6 }}
+                  >
                     <span className="proj-eyebrow">
                       {phaseDone ? 'Unlocked' : 'Unlocks when phase topics are cleared'}
                     </span>
                     <div className="proj-title">{pp.title}</div>
                     <div className="proj-desc">{pp.desc}</div>
-                  </div>
+                  </motion.div>
                 ) : null}
-              </div>
+              </motion.div>
             </div>
           );
         })}
@@ -231,7 +260,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <footer>BUILT FOR ONE ENGINEER'S CLIMB — MEERUT → PRODUCTION</footer>
+      <footer>Built for one engineer&rsquo;s climb — Meerut → production</footer>
     </>
   );
 }
