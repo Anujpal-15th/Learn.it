@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { TOPICS, qid } from '@/lib/topics';
 import { useProgress } from '@/components/useProgress';
 import QuestionRow from '@/components/QuestionRow';
+import ThemeToggle from '@/components/ThemeToggle';
 
 function isLeetCode(q) {
   return !!q.u && q.u.includes('leetcode.com');
@@ -51,9 +52,12 @@ export default function LeetCodePage() {
 
   return (
     <div className="detail">
-      <button className="back-btn" onClick={() => router.push('/')}>
-        ← Back to roadmap
-      </button>
+      <div className="page-topbar">
+        <button className="back-btn" onClick={() => router.push('/')}>
+          ← Back to roadmap
+        </button>
+        <ThemeToggle />
+      </div>
 
       <div className="detail-head">
         <div className="detail-num mono">PRACTICE BANK</div>

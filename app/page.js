@@ -17,6 +17,7 @@ import {
   topicComplete,
 } from '@/lib/topics';
 import { useProgress } from '@/components/useProgress';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const TOTAL_TOPICS = TOPICS.length;
 
@@ -70,6 +71,12 @@ export default function Dashboard() {
           <a className="tab" href="/backend-topics">
             Backend Topics
           </a>
+          <a className="tab" href="/networking">
+            Networking
+          </a>
+          <a className="tab" href="/interview-questions">
+            Interview Q&amp;A
+          </a>
           <a className="tab" href="/algorithms">
             Algorithm List
           </a>
@@ -77,6 +84,7 @@ export default function Dashboard() {
             <span className="dot" aria-hidden="true" />
             {stats.solved} solved
           </a>
+          <ThemeToggle />
           <button className="tab" onClick={handleLogout}>
             Log out
           </button>

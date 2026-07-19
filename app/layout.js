@@ -30,12 +30,28 @@ export const metadata = {
     'A full-stack Java learning roadmap and daily practice tracker — DSA to deployment.',
 };
 
+// Runs before React hydrates so the correct theme applies on first paint —
+// without this, the page would flash light then snap to dark (or vice versa)
+// for anyone who has a saved preference.
+const themeInitScript = `
+(function() {
+  try {
+    var saved = localStorage.getItem('ledger-theme');
+    var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+  } catch (e) {}
+})();
+`;
+
 export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
       className={`${archivo.variable} ${archivoBlack.variable} ${jetbrainsMono.variable}`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body>{children}</body>
     </html>
   );

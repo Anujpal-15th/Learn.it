@@ -10,6 +10,7 @@
 import { useRouter } from 'next/navigation';
 import { BACKEND_CATEGORIES, backendTopicKey, totalBackendTopics } from '@/lib/backend-topics';
 import { useProgress } from '@/components/useProgress';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function BackendTopicsPage() {
   const router = useRouter();
@@ -32,9 +33,12 @@ export default function BackendTopicsPage() {
 
   return (
     <div className="detail">
-      <button className="back-btn" onClick={() => router.push('/')}>
-        ← Back to roadmap
-      </button>
+      <div className="page-topbar">
+        <button className="back-btn" onClick={() => router.push('/')}>
+          ← Back to roadmap
+        </button>
+        <ThemeToggle />
+      </div>
 
       <div className="detail-head">
         <div className="detail-num mono">REFERENCE</div>

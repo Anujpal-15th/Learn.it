@@ -8,6 +8,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { TOPICS, qid, topicSolved, checklistKey, checklistProgress } from '@/lib/topics';
 import { useProgress } from '@/components/useProgress';
 import QuestionRow from '@/components/QuestionRow';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const TOTAL_TOPICS = TOPICS.length;
 
@@ -55,9 +56,12 @@ export default function TopicPage() {
 
   return (
     <div className="detail">
-      <button className="back-btn" onClick={() => router.push('/')}>
-        ← Back to roadmap
-      </button>
+      <div className="page-topbar">
+        <button className="back-btn" onClick={() => router.push('/')}>
+          ← Back to roadmap
+        </button>
+        <ThemeToggle />
+      </div>
 
       <div className="detail-layout">
         <aside className="detail-sidebar">

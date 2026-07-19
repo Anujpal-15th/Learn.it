@@ -1,18 +1,16 @@
 'use client';
 
-// Algorithm List — a flat reference glossary of named algorithms (Huffman
-// coding, Dijkstra, KMP, ...), grouped by category. Separate from the DSA
-// phase's pattern-based topics: this is "have I learned this named
-// algorithm?", not tied to solving a specific practice problem. Uses the
-// same useProgress hook (generic — works with any string id), keyed under
-// 'algo::' so it never collides with topic/subtopic question ids.
+// Networking — a reference glossary of networking fundamentals, grouped by
+// category. Complements the brief "Networking Foundations" subtopic under
+// the REST topic with the fuller standalone treatment. Same shape as
+// Algorithm List / Backend Topics.
 
 import { useRouter } from 'next/navigation';
-import { ALGO_CATEGORIES, algoKey, algoLearnMore, totalAlgorithms } from '@/lib/algorithms';
+import { NETWORKING_CATEGORIES, networkingKey, totalNetworkingTopics } from '@/lib/networking';
 import { useProgress } from '@/components/useProgress';
 import ThemeToggle from '@/components/ThemeToggle';
 
-export default function AlgorithmsPage() {
+export default function NetworkingPage() {
   const router = useRouter();
   const { loading, error, isDone, toggle } = useProgress();
 
@@ -20,14 +18,14 @@ export default function AlgorithmsPage() {
     return (
       <main className="boot">
         <div className="eyebrow">The Ledger</div>
-        <p className="sub">Loading the algorithm list…</p>
+        <p className="sub">Loading networking topics…</p>
       </main>
     );
   }
 
-  const total = totalAlgorithms();
-  const solved = ALGO_CATEGORIES.reduce(
-    (n, c) => n + c.items.filter((it) => isDone(algoKey(it.slug))).length,
+  const total = totalNetworkingTopics();
+  const solved = NETWORKING_CATEGORIES.reduce(
+    (n, c) => n + c.items.filter((it) => isDone(networkingKey(it.slug))).length,
     0
   );
 
@@ -42,10 +40,11 @@ export default function AlgorithmsPage() {
 
       <div className="detail-head">
         <div className="detail-num mono">REFERENCE</div>
-        <div className="detail-title">Algorithm List</div>
+        <div className="detail-title">Networking</div>
         <div className="detail-sub">
-          Every named algorithm worth knowing, grouped by category — a
-          glossary and checklist independent of the roadmap's DSA patterns.
+          The layer underneath every API call — models, transport, naming,
+          security, and how traffic gets scaled — independent of the phase
+          roadmap.
         </div>
         <div className="detail-progress">
           <div className="bar-bg">
@@ -59,20 +58,19 @@ export default function AlgorithmsPage() {
         {error ? <div className="detail-error">{error}</div> : null}
       </div>
 
-      {ALGO_CATEGORIES.map((cat) => {
-        const doneC = cat.items.filter((it) => isDone(algoKey(it.slug))).length;
+      {NETWORKING_CATEGORIES.map((cat) => {
+        const doneC = cat.items.filter((it) => isDone(networkingKey(it.slug))).length;
         return (
           <div className="sub-block" key={cat.name}>
             <div className="sub-head">
-              <span className="sub-title">{cat.name}</span>
+              <span className="bank-group-title">{cat.name}</span>
               <div className="sub-line" />
               <span className="sub-count mono">{doneC}/{cat.items.length}</span>
             </div>
 
             {cat.items.map((item) => {
-              const id = algoKey(item.slug);
+              const id = networkingKey(item.slug);
               const done = isDone(id);
-              const learn = algoLearnMore(item);
               return (
                 <div
                   key={item.slug}
@@ -94,12 +92,12 @@ export default function AlgorithmsPage() {
                   </div>
                   <a
                     className="algo-link mono"
-                    href={learn.url}
+                    href={item.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    Learn {'↗'}
+                    {item.src} {'↗'}
                   </a>
                 </div>
               );

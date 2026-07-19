@@ -11,6 +11,25 @@
   --paper2: #ffffff;   /* card/surface background */
   --faint: #c9c9c4;    /* grid lines, subtle borders, dividers */
   --mid: #6b6b66;      /* secondary/muted text */
+  --gday-l1: #d8d8d4;  /* activity grid: light activity, steps toward --ink */
+  --gday-l2: #9a9a94;
+  --gday-l3: #5a5a56;
+  --topbar-bg: rgba(247, 247, 245, 0.9);
+}
+
+/* Dark mode: the same strict two-tone system, polarity inverted — still no
+   color accents, no gradients, no rounded corners. Applied via a data-theme
+   attribute set by app/layout.js's pre-hydration script + ThemeToggle. */
+:root[data-theme='dark'] {
+  --ink: #efefe9;
+  --paper: #0c0c0b;
+  --paper2: #161613;
+  --faint: #333330;
+  --mid: #a3a39a;
+  --gday-l1: #333330;
+  --gday-l2: #5c5c56;
+  --gday-l3: #92928a;
+  --topbar-bg: rgba(12, 12, 11, 0.9);
 }
 
 * {
@@ -144,7 +163,7 @@ a {
   justify-content: space-between;
   gap: 16px;
   padding: 16px 32px;
-  background: rgba(247, 247, 245, 0.9);
+  background: var(--topbar-bg);
   backdrop-filter: blur(8px);
   border-bottom: 1.5px solid var(--ink);
 }
@@ -329,9 +348,9 @@ h1.title .out {
   background: var(--paper2);
   border: 1px solid var(--faint);
 }
-.gday.l1 { background: #d8d8d4; }
-.gday.l2 { background: #9a9a94; }
-.gday.l3 { background: #5a5a56; }
+.gday.l1 { background: var(--gday-l1); }
+.gday.l2 { background: var(--gday-l2); }
+.gday.l3 { background: var(--gday-l3); }
 .gday.l4 { background: var(--ink); }
 
 /* --- Section label --- */
@@ -727,6 +746,13 @@ footer {
 .back-btn:hover {
   background: var(--ink);
   color: var(--paper);
+}
+
+.page-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .detail-head {

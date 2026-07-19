@@ -1,18 +1,16 @@
 'use client';
 
-// Algorithm List — a flat reference glossary of named algorithms (Huffman
-// coding, Dijkstra, KMP, ...), grouped by category. Separate from the DSA
-// phase's pattern-based topics: this is "have I learned this named
-// algorithm?", not tied to solving a specific practice problem. Uses the
-// same useProgress hook (generic — works with any string id), keyed under
-// 'algo::' so it never collides with topic/subtopic question ids.
+// Interview Q&A — commonly-asked interview questions, grouped by category.
+// Different in kind from the other reference pages: each item IS a question
+// to be able to answer, not a topic to learn — checked off once you can
+// confidently answer it. Each category links to one real, direct article.
 
 import { useRouter } from 'next/navigation';
-import { ALGO_CATEGORIES, algoKey, algoLearnMore, totalAlgorithms } from '@/lib/algorithms';
+import { INTERVIEW_CATEGORIES, interviewKey, totalInterviewQuestions } from '@/lib/interview-questions';
 import { useProgress } from '@/components/useProgress';
 import ThemeToggle from '@/components/ThemeToggle';
 
-export default function AlgorithmsPage() {
+export default function InterviewQuestionsPage() {
   const router = useRouter();
   const { loading, error, isDone, toggle } = useProgress();
 
@@ -20,14 +18,14 @@ export default function AlgorithmsPage() {
     return (
       <main className="boot">
         <div className="eyebrow">The Ledger</div>
-        <p className="sub">Loading the algorithm list…</p>
+        <p className="sub">Loading interview questions…</p>
       </main>
     );
   }
 
-  const total = totalAlgorithms();
-  const solved = ALGO_CATEGORIES.reduce(
-    (n, c) => n + c.items.filter((it) => isDone(algoKey(it.slug))).length,
+  const total = totalInterviewQuestions();
+  const solved = INTERVIEW_CATEGORIES.reduce(
+    (n, c) => n + c.items.filter((it) => isDone(interviewKey(it.slug))).length,
     0
   );
 
@@ -42,10 +40,11 @@ export default function AlgorithmsPage() {
 
       <div className="detail-head">
         <div className="detail-num mono">REFERENCE</div>
-        <div className="detail-title">Algorithm List</div>
+        <div className="detail-title">Interview Q&amp;A</div>
         <div className="detail-sub">
-          Every named algorithm worth knowing, grouped by category — a
-          glossary and checklist independent of the roadmap's DSA patterns.
+          Commonly-asked interview questions across Java, Spring, databases,
+          REST, system design, testing, and behavioral rounds — check one off
+          once you can confidently answer it out loud, not just recognize it.
         </div>
         <div className="detail-progress">
           <div className="bar-bg">
@@ -54,25 +53,33 @@ export default function AlgorithmsPage() {
               style={{ width: (total ? Math.round((solved / total) * 100) : 0) + '%' }}
             />
           </div>
-          <span className="mono" style={{ fontSize: 12 }}>{solved}/{total} known</span>
+          <span className="mono" style={{ fontSize: 12 }}>{solved}/{total} ready</span>
         </div>
         {error ? <div className="detail-error">{error}</div> : null}
       </div>
 
-      {ALGO_CATEGORIES.map((cat) => {
-        const doneC = cat.items.filter((it) => isDone(algoKey(it.slug))).length;
+      {INTERVIEW_CATEGORIES.map((cat) => {
+        const doneC = cat.items.filter((it) => isDone(interviewKey(it.slug))).length;
         return (
           <div className="sub-block" key={cat.name}>
             <div className="sub-head">
-              <span className="sub-title">{cat.name}</span>
+              <span className="bank-group-title">{cat.name}</span>
               <div className="sub-line" />
               <span className="sub-count mono">{doneC}/{cat.items.length}</span>
             </div>
+            <a
+              className="concept-more"
+              href={cat.source.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: 'inline-block', marginBottom: 12 }}
+            >
+              {cat.source.label} {'↗'}
+            </a>
 
             {cat.items.map((item) => {
-              const id = algoKey(item.slug);
+              const id = interviewKey(item.slug);
               const done = isDone(id);
-              const learn = algoLearnMore(item);
               return (
                 <div
                   key={item.slug}
@@ -89,18 +96,9 @@ export default function AlgorithmsPage() {
                 >
                   <div className="q-check">{done ? '✓' : ''}</div>
                   <div className="q-text">
-                    <div>{item.t}</div>
+                    <div>{item.q}</div>
                     <div className="algo-desc">{item.d}</div>
                   </div>
-                  <a
-                    className="algo-link mono"
-                    href={learn.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    Learn {'↗'}
-                  </a>
                 </div>
               );
             })}

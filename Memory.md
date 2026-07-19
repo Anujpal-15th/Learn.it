@@ -311,4 +311,34 @@ Format for each entry — keep entries short and factual:
 
 **Left to do:** push (no attribution) → Vercel redeploy → live verification: SOLID topic shows all 7 subtopics with the full pattern catalog, a sampled `learnMore` link resolves to a real article (not a GFG search page), Backend Topics page loads from the navbar with 58 items across 13 categories and its own progress tracking, updated phase-project descriptions appear on the dashboard.
 
+**Next step (superseded by the entry below):** commit + push + live browser verification against https://learn-it-roan.vercel.app.
+
+---
+
+## Dark mode, real perf diagnosis, Networking + Interview Q&A pages, phase-project completion pass — 2026-07-19
+
+**Status:** done, code complete + builds clean; pushing + live-verifying next
+
+**Why:** user asked for (in one dense message): a real link-fix/audit, phase projects "recreated according to the topics," dark mode, another loading-time pass, and two more nav-accessible reference pages — "Networking" and "Interview [asked] Questions" — closing with "then we work on UI" (signals this round is content/infra, a UI-focused round is expected next).
+
+**Built — dark mode:** `app/layout.js` gained a pre-hydration inline script (reads `localStorage['ledger-theme']` or falls back to `prefers-color-scheme`, sets `data-theme` on `<html>` before React hydrates — avoids a flash of the wrong theme). New `components/ThemeToggle.js` — small client toggle, persists to localStorage. `globals.css`: added a `:root[data-theme='dark']` block that inverts the same 5 tokens (still strictly two-tone, no color accents — a deliberate, user-requested deviation from Design.md, which didn't originally specify a dark mode). Found and fixed two places that would have broken under a naive toggle: the activity-grid's 3 mid-tone fills (`.gday.l1/l2/l3`) were hardcoded hex, not tied to `--ink`, so they wouldn't invert correctly — replaced with `--gday-l1/l2/l3` variables, themed in both blocks; the topbar's translucent backdrop was a hardcoded light `rgba()`, replaced with a `--topbar-bg` variable. `ThemeToggle` added to the dashboard topbar and to a new shared `.page-topbar` row (back-button + toggle) on every other page (topic detail, LeetCode bank, Algorithms, Backend Topics, and the two new pages below).
+
+**Real performance diagnosis (not guessed) via `performance.getEntriesByType` on the live production site:** DOMContentLoaded 320ms, full load event 444ms, both `/api/auth/me` and `/api/progress` firing in parallel (confirmed — the earlier `Promise.all` fix is working in production) and completing by ~730ms. This is genuinely fast; the font-hosting and parallel-fetch fixes from the previous round are doing their job. Did not find a further code-level lever worth pulling given these numbers. Told the user plainly: any remaining perceived slowness is most likely a Neon free-tier cold-start on the first request after idle, which isn't fixable from application code.
+
+**Built — Networking (new, nav-accessible, separate from the roadmap):**
+- New `lib/networking.js` — `NETWORKING_CATEGORIES`: 19 items across 5 categories (Models & Layers, Transport Layer, Naming & Discovery, HTTP/TLS & Security, Scaling Traffic). Complements, doesn't replace, the existing brief "Networking Foundations" subtopic under the REST topic.
+- New `app/networking/page.js`, same shape as Algorithm List/Backend Topics.
+- Links sourced from Cloudflare's Learning Center (verified via search, one spot-checked via real browser navigation after a WebFetch 403 turned out to be Cloudflare's own bot-protection, not a dead link) and stable, high-confidence Wikipedia articles for foundational terms (DNS, TCP, UDP, NAT, DHCP, Firewall, VPN, Load Balancing, WebSocket, TLS) — deliberately no `GFG(query)` search-style links anywhere in this file.
+
+**Built — Interview Q&A (new, nav-accessible):**
+- New `lib/interview-questions.js` — `INTERVIEW_CATEGORIES`: 50 questions across 10 categories (Core Java, OOP & SOLID, Collections & Streams, Multithreading, Spring & Spring Boot, Database & SQL, REST API Design, System Design, Testing, Behavioral). Different in kind from every other reference page: each item IS the actual question (not a topic name), with a "what it's really testing" one-liner instead of a definition. One real category-level source link each (Baeldung's Java/Spring/Spring-Boot interview-question hubs, GeeksforGeeks' SQL-interview and STAR-methodology articles, restfulapi.net, all verified via search) rather than one link per question.
+- New `app/interview-questions/page.js` — same checkable shape, category source link shown once per group instead of per row.
+- `app/page.js`: navbar now has Backend Topics, Networking, Interview Q&A, Algorithm List, LeetCode-bank link, ThemeToggle, then Log out — in that order, Backend Topics first per the user's earlier "top of the navbar" instruction, the two new ones placed right after it.
+
+**Built — phase-project completion pass:** re-read all 8 `PHASE_PROJECTS` against their phase's actual current topic list. 6 of 8 already held up (including the 3 touched in the previous round). Fixed the 2 that didn't: Phase 6's project never mentioned the Cloud topic at all — now includes deploying one design doc on real cloud infra. Phase 7's project didn't test the vanilla HTML/CSS/JS foundations taught before React — now explicitly calls for applying them, not skipping straight to the framework.
+
+**Verified:** `npm run build` compiles clean (`/networking` 3.83kB, `/interview-questions` 5.96kB, both new routes registered). Spot-checked 2 of the newest links via WebFetch/real browser render — both confirmed real, direct articles matching their expected titles.
+
+**Left to do:** push (no attribution) → Vercel redeploy → live verification: dark mode toggle works and persists across reload, Networking and Interview Q&A pages load from the nav with correct item counts and real working links, updated Phase 6/7 project text appears on the dashboard.
+
 **Next step:** commit + push + live browser verification against https://learn-it-roan.vercel.app.
