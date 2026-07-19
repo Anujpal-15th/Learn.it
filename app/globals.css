@@ -12,12 +12,12 @@
   --paper2: #ffffff;     /* card/surface background */
   --faint: #e7e7ea;      /* borders, dividers — low-contrast, not a grid */
   --mid: #6f7178;        /* secondary/muted text */
-  --accent: #6d5ef0;     /* one considered accent — primary actions, progress, checks */
+  --accent: #16a34a;     /* one considered accent — primary actions, progress, checks */
   --accent-ink: #ffffff; /* text/icon color on top of --accent */
-  --accent-soft: #efecfd; /* tinted background for accent chips/badges */
-  --gday-l1: #e3ddfb;    /* activity grid: light activity, steps toward --accent */
-  --gday-l2: #b7a8f5;
-  --gday-l3: #8a72ee;
+  --accent-soft: #e7f6ec; /* tinted background for accent chips/badges */
+  --gday-l1: #cdeed9;    /* activity grid: light activity, steps toward --accent */
+  --gday-l2: #7ecb9a;
+  --gday-l3: #2fa860;
   --topbar-bg: rgba(250, 250, 250, 0.85);
   --radius-sm: 8px;
   --radius-md: 14px;
@@ -36,12 +36,12 @@
   --paper2: #17181c;
   --faint: #2a2c32;
   --mid: #93949c;
-  --accent: #8b7cf6;
+  --accent: #34c471;
   --accent-ink: #0d0e11;
-  --accent-soft: #241f3d;
-  --gday-l1: #26223f;
-  --gday-l2: #4a3f8a;
-  --gday-l3: #6f5fd6;
+  --accent-soft: #17301f;
+  --gday-l1: #17301f;
+  --gday-l2: #22623a;
+  --gday-l3: #2e9a56;
   --topbar-bg: rgba(13, 14, 17, 0.85);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
