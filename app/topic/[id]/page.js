@@ -5,6 +5,7 @@
 // shared useProgress hook.
 
 import { useParams, useRouter } from 'next/navigation';
+import { motion } from 'motion/react';
 import { TOPICS, qid, topicSolved, checklistKey, checklistProgress } from '@/lib/topics';
 import { useProgress } from '@/components/useProgress';
 import QuestionRow from '@/components/QuestionRow';
@@ -157,12 +158,15 @@ export default function TopicPage() {
                         const id = checklistKey(top.id, si, ci);
                         const done = isDone(id);
                         return (
-                          <div
+                          <motion.div
                             key={id}
                             className={'q-row' + (done ? ' done' : '')}
                             onClick={() => toggle(id)}
                             role="button"
                             tabIndex={0}
+                            whileHover={{ y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            transition={{ type: 'spring', stiffness: 400, damping: 28 }}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' || e.key === ' ') {
                                 e.preventDefault();
@@ -172,7 +176,7 @@ export default function TopicPage() {
                           >
                             <div className="q-check">{done ? '✓' : ''}</div>
                             <div className="q-text">{name}</div>
-                          </div>
+                          </motion.div>
                         );
                       })}
                     </div>
