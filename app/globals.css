@@ -1119,48 +1119,6 @@ footer {
   margin-bottom: 26px;
 }
 
-.btn-google {
-  width: 100%;
-  border: 1px solid var(--faint);
-  border-radius: var(--radius-sm);
-  background: var(--paper2);
-  color: var(--ink);
-  font-family: var(--font-body), sans-serif;
-  font-weight: 600;
-  font-size: 14px;
-  padding: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  cursor: pointer;
-  transition: background 0.2s, border-color 0.2s, transform 0.15s;
-}
-
-.btn-google:hover {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-  transform: translateY(-1px);
-}
-
-.auth-divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 20px 0;
-  color: var(--mid);
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.auth-divider::before,
-.auth-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--faint);
-}
-
 .field {
   margin-bottom: 16px;
 }
