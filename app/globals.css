@@ -635,14 +635,15 @@ footer {
   gap: 10px;
   font-size: 12px;
   font-weight: 600;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--faint);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
   color: var(--mid);
-  transition: color 0.2s;
+  transition: color 0.2s, background 0.2s;
 }
 
 .sidebar-link:hover {
-  color: var(--ink);
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .sidebar-link .mono {
@@ -677,24 +678,26 @@ footer {
 }
 
 .back-btn {
-  font-family: var(--font-mono), monospace;
-  font-size: 12px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  border: 1.5px solid var(--ink);
-  padding: 8px 16px;
+  font-family: var(--font-body), sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--faint);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
   cursor: pointer;
-  background: none;
+  background: var(--paper2);
   color: var(--ink);
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
 }
 
 .back-btn:hover {
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+  transform: translateY(-1px);
 }
 
 .page-topbar {
@@ -706,27 +709,33 @@ footer {
 
 .detail-head {
   margin: 32px 0 40px;
-  border-bottom: 1.5px solid var(--ink);
+  border-bottom: 1px solid var(--faint);
   padding-bottom: 28px;
 }
 
 .detail-num {
   font-family: var(--font-mono), monospace;
-  color: var(--mid);
-  font-size: 13px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .detail-title {
   font-family: var(--font-display), sans-serif;
+  font-weight: 700;
   font-size: clamp(28px, 4.6vw, 48px);
-  text-transform: uppercase;
   letter-spacing: -1px;
-  margin-top: 8px;
+  margin-top: 12px;
 }
 
 .detail-sub {
   color: var(--mid);
-  font-weight: 600;
+  font-weight: 400;
+  font-size: 16px;
   margin-top: 10px;
   max-width: 640px;
 }
@@ -782,10 +791,9 @@ footer {
 }
 
 .sub-title {
-  font-family: var(--font-body), sans-serif;
-  font-weight: 800;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
   font-size: 17px;
-  text-transform: uppercase;
 }
 
 .sub-count {
@@ -804,19 +812,26 @@ footer {
    so a subtopic teaches before it tests. Bordered block, mono eyebrow label,
    plain bullet list — no new colors, stays inside the ledger system. */
 .concept-block {
-  border: 1px solid var(--ink);
+  border: 1px solid var(--faint);
+  border-radius: var(--radius-md);
   background: var(--paper2);
-  padding: 16px 18px;
+  box-shadow: var(--shadow-sm);
+  padding: 18px 20px;
   margin-bottom: 12px;
 }
 
 .concept-eyebrow {
   font-family: var(--font-mono), monospace;
   font-size: 10px;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  color: var(--mid);
-  margin-bottom: 10px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  margin-bottom: 12px;
 }
 
 .concept-list {
@@ -858,45 +873,51 @@ footer {
   gap: 14px;
   padding: 13px 16px;
   border: 1px solid var(--faint);
+  border-radius: var(--radius-sm);
   margin-bottom: 8px;
   background: var(--paper2);
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
 }
 
 .q-row:hover {
-  border-color: var(--ink);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-sm);
 }
 
 .q-row.done {
-  background: var(--ink);
+  background: var(--accent-soft);
+  border-color: var(--accent-soft);
 }
 
 .q-row.done .q-text,
 .q-row.done .q-text a {
-  color: var(--paper);
+  color: var(--mid);
   text-decoration-color: var(--mid);
 }
 
 .q-row.done .q-plat {
-  color: var(--faint);
+  color: var(--mid);
 }
 
 .q-check {
   width: 20px;
   height: 20px;
-  border: 1.5px solid var(--ink);
+  border: 1.5px solid var(--faint);
+  border-radius: 6px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
   font-weight: 900;
+  transition: background 0.2s, border-color 0.2s;
 }
 
 .q-row.done .q-check {
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .q-text {
@@ -956,62 +977,73 @@ footer {
 .diff {
   font-family: var(--font-mono), monospace;
   font-size: 10px;
+  font-weight: 600;
   letter-spacing: 1px;
   text-transform: uppercase;
   padding: 4px 9px;
-  border: 1px solid var(--ink);
+  border-radius: 999px;
+  border: 1px solid var(--faint);
+  color: var(--mid);
   flex-shrink: 0;
   min-width: 56px;
   text-align: center;
 }
 
 .q-row.done .diff {
-  border-color: var(--paper);
-  color: var(--paper);
+  border-color: transparent;
+  background: var(--paper2);
+  color: var(--mid);
 }
 
-.diff.E { opacity: 0.65; }
+.diff.E { opacity: 0.7; }
 
 .diff.H {
   background: var(--ink);
   color: var(--paper);
+  border-color: var(--ink);
 }
 
 .q-row.done .diff.H {
-  background: var(--paper);
+  background: var(--paper2);
   color: var(--ink);
 }
 
 .mini-proj {
   margin-top: 18px;
-  border: 1.5px dashed var(--ink);
-  padding: 18px 20px;
+  border: 1px dashed var(--accent);
+  border-radius: var(--radius-md);
+  background: var(--accent-soft);
+  padding: 20px 22px;
   display: flex;
   align-items: flex-start;
   gap: 16px;
 }
 
 .mini-proj-flag {
-  font-family: var(--font-display), sans-serif;
+  font-family: var(--font-mono), monospace;
   font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--accent);
+  color: var(--accent-ink);
   padding: 6px 10px;
+  border-radius: 999px;
   flex-shrink: 0;
 }
 
 .mini-proj-title {
-  font-weight: 800;
-  font-size: 14px;
-  text-transform: uppercase;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  font-size: 15px;
 }
 
 .mini-proj-desc {
-  font-size: 13px;
+  font-size: 13.5px;
   color: var(--mid);
   margin-top: 4px;
-  font-weight: 600;
+  font-weight: 400;
+  line-height: 1.55;
 }
 
 .detail-error {
@@ -1024,9 +1056,9 @@ footer {
 /* Group header on the LeetCode bank page. */
 .bank-group-title {
   font-family: var(--font-display), sans-serif;
+  font-weight: 700;
   font-size: 18px;
-  text-transform: uppercase;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.3px;
 }
 
 /* --- Auth pages (login / signup) --- */
@@ -1042,7 +1074,9 @@ footer {
   width: 100%;
   max-width: 420px;
   background: var(--paper2);
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--faint);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   padding: 40px 36px;
   opacity: 0;
   transform: translateY(16px);
@@ -1072,9 +1106,9 @@ footer {
 
 .auth-title {
   font-family: var(--font-display), sans-serif;
-  font-size: 30px;
-  text-transform: uppercase;
-  letter-spacing: -1px;
+  font-weight: 700;
+  font-size: 28px;
+  letter-spacing: -0.5px;
   margin: 24px 0 6px;
 }
 
@@ -1101,17 +1135,20 @@ footer {
 
 .field input {
   width: 100%;
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--faint);
+  border-radius: var(--radius-sm);
   background: var(--paper2);
   color: var(--ink);
   font-family: var(--font-body), sans-serif;
   font-size: 15px;
   padding: 12px 14px;
   outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .field input:focus {
-  background: var(--paper);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .field input::placeholder {
@@ -1120,22 +1157,23 @@ footer {
 
 .btn-primary {
   width: 100%;
-  border: 1.5px solid var(--ink);
-  background: var(--ink);
-  color: var(--paper);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-ink);
   font-family: var(--font-body), sans-serif;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0;
+  font-size: 15px;
   padding: 14px;
   cursor: pointer;
   margin-top: 6px;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, transform 0.15s;
 }
 
 .btn-primary:hover {
-  opacity: 0.85;
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 .btn-primary:disabled {
@@ -1161,11 +1199,11 @@ footer {
 }
 
 .auth-alt a {
-  font-weight: 800;
+  font-weight: 700;
   text-decoration: underline;
   text-decoration-style: dotted;
   text-underline-offset: 3px;
-  color: var(--ink);
+  color: var(--accent);
 }
 
 @media (prefers-reduced-motion: reduce) {
