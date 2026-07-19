@@ -1206,6 +1206,43 @@ footer {
   color: var(--accent);
 }
 
+/* Mobile: the topbar's brand + nav row has no wrap/scroll fallback above —
+   on narrow screens it was overflowing past the viewport edge. Wrap it and
+   tighten side padding across the page shells to match. */
+@media (max-width: 640px) {
+  .topbar {
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    row-gap: 10px;
+  }
+
+  .topbar .nav {
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .tab {
+    font-size: 12px;
+    padding: 7px 11px;
+  }
+
+  .boot,
+  .hero,
+  .growth,
+  .section-label,
+  .phase,
+  .capstone,
+  .detail {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .ledger {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation: none !important;
