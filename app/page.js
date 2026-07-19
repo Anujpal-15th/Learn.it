@@ -4,7 +4,7 @@
 // strip, the daily activity grid, and every phase -> topic card. Read-only:
 // toggling questions happens on the topic detail page (Phase 4).
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
 import {
@@ -34,6 +34,7 @@ const cardVariants = {
 export default function Dashboard() {
   const router = useRouter();
   const { user, progress, growth, loading } = useProgress();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -77,7 +78,15 @@ export default function Dashboard() {
           <span className="mark">THE LEDGER//</span>
           <span className="sub">{user.name || user.email}</span>
         </div>
-        <div className="nav">
+        <button
+          className="menu-btn"
+          onClick={() => setMenuOpen((o) => !o)}
+          aria-label="Menu"
+          aria-expanded={menuOpen}
+        >
+          {menuOpen ? '✕' : '☰'}
+        </button>
+        <div className={'nav' + (menuOpen ? ' open' : '')}>
           <a className="tab" href="/backend-topics">
             Backend Topics
           </a>

@@ -1206,25 +1206,63 @@ footer {
   color: var(--accent);
 }
 
-/* Mobile: the topbar's brand + nav row has no wrap/scroll fallback above —
-   on narrow screens it was overflowing past the viewport edge. Wrap it and
-   tighten side padding across the page shells to match. */
+/* Hamburger menu button — hidden on desktop, shown in place of the inline
+   nav row once the topbar switches to the dropdown below 640px. */
+.menu-btn {
+  display: none;
+  font-family: var(--font-body), sans-serif;
+  font-size: 18px;
+  line-height: 1;
+  border: 1px solid var(--faint);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  background: var(--paper2);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.menu-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Mobile: the topbar's inline nav row (4 links + solved badge + theme
+   toggle + logout) doesn't fit at phone widths — collapse it behind a
+   hamburger button that opens a stacked dropdown panel instead. */
 @media (max-width: 640px) {
   .topbar {
-    flex-wrap: wrap;
     padding: 12px 16px;
-    row-gap: 10px;
+    position: relative;
+  }
+
+  .menu-btn {
+    display: inline-flex;
+    align-items: center;
   }
 
   .topbar .nav {
-    flex-wrap: wrap;
-    width: 100%;
-    gap: 8px;
+    display: none;
   }
 
-  .tab {
-    font-size: 12px;
-    padding: 7px 11px;
+  .topbar .nav.open {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 16px;
+    left: 16px;
+    background: var(--paper2);
+    border: 1px solid var(--faint);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    padding: 10px;
+    z-index: 60;
+  }
+
+  .topbar .nav.open .tab {
+    justify-content: flex-start;
   }
 
   .boot,
