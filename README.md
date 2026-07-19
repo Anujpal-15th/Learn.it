@@ -1,12 +1,18 @@
-# The Ledger
+# Learn.it
 
 A full-stack Java backend learning roadmap and daily practice tracker — DSA to deployment.
 
 **Live:** [learn-it-roan.vercel.app](https://learn-it-roan.vercel.app)
 
+> Vibe coded — built end to end through conversation, iterated in the open rather than planned upfront.
+
+## Who this is for
+
+Anyone who wants to become a Java backend engineer and isn't sure what to actually learn, in what order. If you keep asking "what topics do I even need for this?", "am I skipping something important?", or "is there a real syllabus for this instead of 20 scattered YouTube playlists?" — that's exactly the gap Learn.it fills: one concrete, ordered list of every topic a working backend engineer needs, from your first `int x = 5;` to a deployed, containerized, cloud-hosted service.
+
 ## What it is
 
-The Ledger is a structured, checkbox-driven roadmap for learning backend engineering with Java: 8 phases, 30 topics, and 500+ real practice questions — covering DSA and algorithms, Java fundamentals, SQL/JPA/NoSQL, Spring Boot and REST, security and testing, Docker/Kubernetes/CI-CD, system design, and a React/TypeScript frontend layer to close the loop.
+Learn.it is a structured, checkbox-driven roadmap for learning backend engineering with Java: 8 phases, 30 topics, and 500+ real practice questions — covering DSA and algorithms, Java fundamentals, SQL/JPA/NoSQL, Spring Boot and REST, security and testing, Docker/Kubernetes/CI-CD, system design, and a React/TypeScript frontend layer to close the loop.
 
 Every subtopic opens with a short "what to learn" primer before the practice questions, so it reads as *learn → then practice*, not just a pile of links. Every question links to a real, verified problem (LeetCode, HackerRank, or a real article) — nothing invented. Progress is saved per-account and rendered as a GitHub-style daily activity ledger.
 
