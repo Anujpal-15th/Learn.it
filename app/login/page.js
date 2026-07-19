@@ -27,7 +27,7 @@ export default function LoginPage() {
         setBusy(false);
         return;
       }
-      router.push('/');
+      router.push('/dashboard');
       router.refresh();
     } catch {
       setError('Network error — please try again.');

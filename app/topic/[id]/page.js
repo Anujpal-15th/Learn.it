@@ -40,7 +40,7 @@ export default function TopicPage() {
   if (!top) {
     return (
       <div className="detail">
-        <button className="back-btn" onClick={() => router.push('/')}>
+        <button className="back-btn" onClick={() => router.push('/dashboard')}>
           ← Back to roadmap
         </button>
         <div className="detail-head">
@@ -58,7 +58,7 @@ export default function TopicPage() {
   return (
     <div className="detail">
       <div className="page-topbar">
-        <button className="back-btn" onClick={() => router.push('/')}>
+        <button className="back-btn" onClick={() => router.push('/dashboard')}>
           ← Back to roadmap
         </button>
         <ThemeToggle />

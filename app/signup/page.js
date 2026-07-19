@@ -29,7 +29,7 @@ export default function SignupPage() {
         return;
       }
       // Session cookie is set by the server; go to the dashboard.
-      router.push('/');
+      router.push('/dashboard');
       router.refresh();
     } catch {
       setError('Network error — please try again.');

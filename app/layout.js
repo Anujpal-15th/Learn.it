@@ -1,5 +1,6 @@
 import { Sora, Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
+import DragonMascot from '@/components/DragonMascot';
 
 // New design system (v2): Sora for display/headings, Inter for body/UI —
 // the professional-product pairing (Linear/Vercel/Raycast-style), replacing
@@ -52,7 +53,10 @@ export default function RootLayout({ children }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <DragonMascot />
+      </body>
     </html>
   );
 }

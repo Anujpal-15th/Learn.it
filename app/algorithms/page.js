@@ -34,7 +34,7 @@ export default function AlgorithmsPage() {
   return (
     <div className="detail">
       <div className="page-topbar">
-        <button className="back-btn" onClick={() => router.push('/')}>
+        <button className="back-btn" onClick={() => router.push('/dashboard')}>
           ← Back to roadmap
         </button>
         <ThemeToggle />
