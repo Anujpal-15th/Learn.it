@@ -17,3 +17,13 @@
 .DS_Store
 *.pem
 npm-debug.log*
+
+# internal planning/build docs — kept locally, not part of the public repo
+Architecture.md
+Design.md
+Memory.md
+PRD.md
+Phases.md
+Rules.md
+START_HERE_prompt.md
+backend-roadmap (1).html
