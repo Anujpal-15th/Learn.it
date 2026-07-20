@@ -12,6 +12,7 @@ import { motion, useInView, useScroll, useTransform, animate } from 'motion/reac
 import Link from 'next/link';
 import { TOPICS, PHASES, PHASE_PROJECTS, totalQuestions } from '@/lib/topics';
 import ThemeToggle from '@/components/ThemeToggle';
+import Logo from '@/components/Logo';
 
 const TOTAL_TOPICS = TOPICS.length;
 const TOTAL_QUESTIONS = totalQuestions();
@@ -53,7 +54,8 @@ export default function LandingPage() {
     <div className="landing">
       <div className="topbar">
         <div className="brand">
-          <span className="mark">THE LEDGER//</span>
+          <Logo size={26} />
+          <span className="mark">Learn.it</span>
         </div>
         <div className="nav">
           <ThemeToggle />

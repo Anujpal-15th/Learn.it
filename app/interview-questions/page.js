@@ -17,7 +17,7 @@ export default function InterviewQuestionsPage() {
   if (loading) {
     return (
       <main className="boot">
-        <div className="eyebrow">The Ledger</div>
+        <div className="eyebrow">Learn.it</div>
         <p className="sub">Loading interview questions…</p>
       </main>
     );

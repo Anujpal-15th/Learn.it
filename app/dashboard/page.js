@@ -19,6 +19,7 @@ import {
 } from '@/lib/topics';
 import { useProgress } from '@/components/useProgress';
 import ThemeToggle from '@/components/ThemeToggle';
+import Logo from '@/components/Logo';
 
 const TOTAL_TOPICS = TOPICS.length;
 
@@ -65,7 +66,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <main className="boot">
-        <div className="eyebrow">The Ledger</div>
+        <div className="eyebrow">Learn.it</div>
         <p className="sub">Loading your roadmap…</p>
       </main>
     );
@@ -75,7 +76,8 @@ export default function Dashboard() {
     <>
       <div className="topbar">
         <div className="brand">
-          <span className="mark">THE LEDGER//</span>
+          <Logo size={26} />
+          <span className="mark">Learn.it</span>
           <span className="sub">{user.name || user.email}</span>
         </div>
         <button

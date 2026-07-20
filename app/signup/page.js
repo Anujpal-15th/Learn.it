@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Logo from '@/components/Logo';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -41,7 +42,8 @@ export default function SignupPage() {
     <div className="auth-wrap">
       <div className="auth-card">
         <div className="auth-brand">
-          <span className="mark">THE LEDGER//</span>
+          <Logo size={24} />
+          <span className="mark">Learn.it</span>
           <span className="sub">Sign up</span>
         </div>
         <h1 className="auth-title">Start the climb.</h1>

@@ -25,7 +25,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata = {
-  title: 'The Ledger',
+  title: 'Learn.it',
   description:
     'A full-stack Java learning roadmap and daily practice tracker — DSA to deployment.',
 };

@@ -17,7 +17,7 @@ export default function NetworkingPage() {
   if (loading) {
     return (
       <main className="boot">
-        <div className="eyebrow">The Ledger</div>
+        <div className="eyebrow">Learn.it</div>
         <p className="sub">Loading networking topics…</p>
       </main>
     );

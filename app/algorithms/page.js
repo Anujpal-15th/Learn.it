@@ -19,7 +19,7 @@ export default function AlgorithmsPage() {
   if (loading) {
     return (
       <main className="boot">
-        <div className="eyebrow">The Ledger</div>
+        <div className="eyebrow">Learn.it</div>
         <p className="sub">Loading the algorithm list…</p>
       </main>
     );

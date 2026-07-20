@@ -44,7 +44,7 @@ export default function LeetCodePage() {
   if (loading) {
     return (
       <main className="boot">
-        <div className="eyebrow">The Ledger</div>
+        <div className="eyebrow">Learn.it</div>
         <p className="sub">Loading the bank…</p>
       </main>
     );
