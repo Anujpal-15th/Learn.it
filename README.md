@@ -14,7 +14,7 @@ Anyone who wants to become a Java backend engineer or an AI engineer and isn't s
 
 Learn.it is two structured, checkbox-driven roadmaps:
 
-- **Java Developer** — 8 phases, 30 topics, 500+ real practice questions: DSA and algorithms, Java fundamentals, SQL/JPA/NoSQL, Spring Boot and REST, security and testing, Docker/Kubernetes/CI-CD, system design, and a React/TypeScript frontend layer to close the loop.
+- **Java Developer** — 28 phases, 37 topics, 500+ real practice questions, grouped into five readiness tiers (Core Java Foundations, Parallel DSA Track, Backend Development, Production & Advanced Backend, System Design & Advanced) plus optional extensions: DSA as an independent parallel track, Java fundamentals and OOP design, SQL/JPA, Spring Boot and REST, production API engineering, security and testing, caching/messaging, Docker/CI-CD/cloud, system design and microservices, and optional NoSQL/Kubernetes/React-TypeScript frontend extensions.
 - **AI Engineer** — 13 phases, 15 topics: Python and math foundations, data tooling, classical ML and deep learning, PyTorch, NLP, generative AI/LLMs, RAG, AI agents, frameworks (Hugging Face/LangChain/LangGraph/LlamaIndex/FastAPI), fine-tuning, and MLOps.
 
 The guided layer on top of both roadmaps:
@@ -22,7 +22,7 @@ The guided layer on top of both roadmaps:
 - **Prerequisites** — a soft "recommended prerequisites" notice on a topic if you jump ahead; never blocks access.
 - **Recommended next topic** — computed from what you've completed, roadmap order, and prerequisite state, with a plain-English reason.
 - **Milestones** — each roadmap's phases shown as a progress track with the current phase always visually obvious.
-- **Per-topic quiz** — 5 questions per topic (225 total across both roadmaps), answered inline with immediate correct-answer + explanation.
+- **Per-topic quiz** — 5 questions per topic (260 total across both roadmaps), answered inline with immediate correct-answer + explanation.
 - **Job-readiness checklist** — per career, a rollup of named skill areas (not a guarantee of employment).
 - **Site search** — across topics, subtopics, practice questions, resources, and projects in both roadmaps.
 
@@ -32,7 +32,7 @@ Every subtopic opens with a short "what to learn" primer before the practice que
 
 - Email/password authentication with httpOnly JWT session cookies (`bcryptjs` + `jsonwebtoken`)
 - Per-user progress tracking, persisted to Postgres, with a daily activity heatmap
-- Two full career roadmaps (45 topics total), each with concept primers, a practice-question checklist, a 5-question quiz, and a checkpoint project
+- Two full career roadmaps (52 topics total), each with concept primers, a practice-question checklist, a 5-question quiz, and a checkpoint project
 - Dedicated reference pages (Java track): Algorithm List, Backend Topics, Networking, Interview Q&A (both tracks), and a LeetCode-only bank view
 - Light/dark mode
 - A public landing page: headline + exactly two career cards, no marketing clutter

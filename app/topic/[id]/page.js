@@ -18,7 +18,7 @@ import {
   projectDone,
 } from '@/lib/topics';
 import { findTopicRoadmap } from '@/lib/roadmaps';
-import { prerequisiteGaps, recommendNextTopic } from '@/lib/roadmap-engine';
+import { prerequisiteGaps, recommendNextFrom } from '@/lib/roadmap-engine';
 import { getTopicMeta } from '@/lib/roadmap-meta';
 import { useProgress } from '@/components/useProgress';
 import QuestionRow from '@/components/QuestionRow';
@@ -70,7 +70,9 @@ export default function TopicPage() {
   const gaps = prerequisiteGaps(top.id, progress);
   const projDone = projectDone(top.id, progress);
 
-  const recommendation = recommendNextTopic(roadmap, progress);
+  // DSA topics recommend within the parallel DSA track; everything else
+  // recommends the next core topic — never crosses into the other track.
+  const recommendation = recommendNextFrom(roadmap, top, progress);
   const nextTopic =
     recommendation && recommendation.topic.id !== top.id ? recommendation.topic : null;
 

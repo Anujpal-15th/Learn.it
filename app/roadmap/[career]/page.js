@@ -16,7 +16,7 @@ import {
   phaseProjectDone,
 } from '@/lib/topics';
 import { getRoadmap, getCareer } from '@/lib/roadmaps';
-import { milestoneStats, roadmapStats, recommendNextTopic } from '@/lib/roadmap-engine';
+import { tierSections, roadmapStats, recommendNextTopic, recommendDsaPractice } from '@/lib/roadmap-engine';
 import { useProgress } from '@/components/useProgress';
 import ThemeToggle from '@/components/ThemeToggle';
 import Logo from '@/components/Logo';
@@ -43,8 +43,9 @@ export default function RoadmapPage() {
   }, [loading, careerId]);
 
   const stats = useMemo(() => (roadmap ? roadmapStats(roadmap, progress) : null), [roadmap, progress]);
-  const milestones = useMemo(() => (roadmap ? milestoneStats(roadmap, progress) : []), [roadmap, progress]);
+  const sections = useMemo(() => (roadmap ? tierSections(roadmap, progress) : []), [roadmap, progress]);
   const recommendation = useMemo(() => (roadmap ? recommendNextTopic(roadmap, progress) : null), [roadmap, progress]);
+  const dsaRecommendation = useMemo(() => (roadmap ? recommendDsaPractice(roadmap, progress) : null), [roadmap, progress]);
 
   const byPhase = useMemo(() => {
     if (!roadmap) return {};
@@ -126,6 +127,12 @@ export default function RoadmapPage() {
             <div className="num">{stats.pct}%</div>
             <div className="lbl">Overall progress</div>
           </div>
+          {stats.dsaStats ? (
+            <div className="cell">
+              <div className="num">{stats.dsaStats.completed}/{stats.dsaStats.total}</div>
+              <div className="lbl">DSA (parallel track)</div>
+            </div>
+          ) : null}
         </div>
       </motion.section>
 
@@ -148,113 +155,133 @@ export default function RoadmapPage() {
       ) : (
         <div className="recommend-card" style={{ marginBottom: 8 }}>
           <div className="recommend-eyebrow">Roadmap complete</div>
-          <div className="recommend-title">Every topic is cleared.</div>
+          <div className="recommend-title">Every required topic is cleared.</div>
           <div className="recommend-reason">
             Check the readiness checklist and make sure the capstone is done too.
           </div>
         </div>
       )}
 
-      <div className="section-label"><span>Milestones</span><div className="ln" /></div>
-      <div className="milestone-track">
-        {milestones.map((m) => (
-          <div className={'milestone-row ' + m.state} key={m.index}>
-            <span className="milestone-num mono">{String(m.index + 1).padStart(2, '0')}</span>
-            <span className="milestone-name">
-              {m.name} {m.done ? '✓' : m.state === 'upcoming' ? '🔒' : ''}
-            </span>
-            <div className="milestone-bar bar-bg">
-              <div className="bar-fill" style={{ width: m.pct + '%' }} />
-            </div>
-            <span className="milestone-pct mono">{m.topicsCompleted}/{m.topicsTotal}</span>
-          </div>
-        ))}
-      </div>
+      {dsaRecommendation ? (
+        <div className="recommend-card" style={{ marginBottom: 32, borderColor: 'var(--faint)', background: 'var(--paper2)' }}>
+          <div className="recommend-eyebrow">DSA practice (parallel — never blocks the path above)</div>
+          <div className="recommend-title">{dsaRecommendation.topic.title}</div>
+          <div className="recommend-reason">{dsaRecommendation.reason}</div>
+          <button
+            className="back-btn"
+            style={{ marginTop: 14 }}
+            onClick={() => router.push('/topic/' + dsaRecommendation.topic.id)}
+          >
+            Practice
+          </button>
+        </div>
+      ) : null}
 
-      <div className="section-label"><span>The Roadmap</span><div className="ln" /></div>
+      {sections.map((section) => (
+        <div key={section.label || 'all'}>
+          {section.label ? (
+            <div className="section-label"><span>{section.label}</span><div className="ln" /></div>
+          ) : null}
 
-      <div>
-        {roadmap.phases.map((ph, pi) => {
-          const phaseTopics = byPhase[pi] || [];
-          const phaseDone = phaseTopics.length > 0 && phaseTopics.every((t) => topicComplete(t, progress));
-          const pp = roadmap.phaseProjects[pi];
-          const ppKey = phaseProjectKey(roadmap.id, pi);
-          const ppDone = phaseProjectDone(roadmap.id, pi, progress);
-          return (
-            <div className="phase" key={pi}>
-              <div className="phase-head">
-                <span className="phase-num mono">{String(pi + 1).padStart(2, '0')}</span>
-                <span className="phase-title">{ph.name}</span>
+          <div className="milestone-track" style={{ marginBottom: 24 }}>
+            {section.phases.map((m) => (
+              <div className={'milestone-row ' + m.state} key={m.index}>
+                <span className="milestone-num mono">{String(m.index + 1).padStart(2, '0')}</span>
+                <span className="milestone-name">
+                  {m.name.replace(/^Phase \d+\s*—\s*/, '')} {m.done ? '✓' : m.state === 'upcoming' ? '🔒' : ''}
+                </span>
+                <div className="milestone-bar bar-bg">
+                  <div className="bar-fill" style={{ width: m.pct + '%' }} />
+                </div>
+                <span className="milestone-pct mono">{m.topicsCompleted}/{m.topicsTotal}</span>
               </div>
-              <div className="phase-desc">{ph.desc}</div>
-              {ph.learnMore ? (
-                <a className="concept-more" href={ph.learnMore.url} target="_blank" rel="noopener noreferrer" style={{ marginBottom: 18, display: 'inline-block' }}>
-                  {ph.learnMore.label} {'↗'}
-                </a>
-              ) : null}
+            ))}
+          </div>
 
-              <motion.div className="topic-grid" variants={gridVariants} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-40px' }}>
-                {phaseTopics.map((top) => {
-                  const { c, t } = topicSolved(top, progress);
-                  const pct = t ? Math.round((c / t) * 100) : 0;
-                  const complete = topicComplete(top, progress);
-                  return (
+          {section.phases.map((m) => {
+            const pi = m.index;
+            const ph = roadmap.phases[pi];
+            const phaseTopics = byPhase[pi] || [];
+            const phaseDone = phaseTopics.length > 0 && phaseTopics.every((t) => topicComplete(t, progress));
+            const pp = roadmap.phaseProjects[pi];
+            const ppKey = phaseProjectKey(roadmap.id, pi);
+            const ppDone = phaseProjectDone(roadmap.id, pi, progress);
+            return (
+              <div className="phase" key={pi}>
+                <div className="phase-head">
+                  <span className="phase-num mono">{String(pi + 1).padStart(2, '0')}</span>
+                  <span className="phase-title">{ph.name}</span>
+                </div>
+                <div className="phase-desc">{ph.desc}</div>
+                {ph.learnMore ? (
+                  <a className="concept-more" href={ph.learnMore.url} target="_blank" rel="noopener noreferrer" style={{ marginBottom: 18, display: 'inline-block' }}>
+                    {ph.learnMore.label} {'↗'}
+                  </a>
+                ) : null}
+
+                <motion.div className="topic-grid" variants={gridVariants} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-40px' }}>
+                  {phaseTopics.map((top) => {
+                    const { c, t } = topicSolved(top, progress);
+                    const pct = t ? Math.round((c / t) * 100) : 0;
+                    const complete = topicComplete(top, progress);
+                    return (
+                      <motion.div
+                        className="card"
+                        key={top.id}
+                        variants={cardVariants}
+                        whileHover={{ y: -4 }}
+                        whileTap={{ scale: 0.97 }}
+                        transition={{ type: 'spring', stiffness: 350, damping: 26 }}
+                        onClick={() => router.push('/topic/' + top.id)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            router.push('/topic/' + top.id);
+                          }
+                        }}
+                      >
+                        <div>
+                          <div className="cnum">
+                            {String(top.num).padStart(2, '0')} / {roadmap.topics.length}
+                            {complete ? ' · Cleared' : ''}
+                          </div>
+                          <div className="ctitle">{top.title}</div>
+                          <div className="cmeta">{top.subtopics.length} subtopics</div>
+                        </div>
+                        <div>
+                          <div className="progress-row">
+                            <div className="bar-bg">
+                              <div className="bar-fill" style={{ width: pct + '%' }} />
+                            </div>
+                            <span className="ctag">{c}/{t}</span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+
+                  {pp ? (
                     <motion.div
-                      className="card"
-                      key={top.id}
+                      className="proj-card"
                       variants={cardVariants}
-                      whileHover={{ y: -4 }}
-                      whileTap={{ scale: 0.97 }}
-                      transition={{ type: 'spring', stiffness: 350, damping: 26 }}
-                      onClick={() => router.push('/topic/' + top.id)}
+                      style={{ opacity: phaseDone || ppDone ? 1 : 0.6, cursor: 'pointer' }}
+                      onClick={() => toggle(ppKey)}
                       role="button"
                       tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          router.push('/topic/' + top.id);
-                        }
-                      }}
                     >
-                      <div>
-                        <div className="cnum">
-                          {String(top.num).padStart(2, '0')} / {roadmap.topics.length}
-                          {complete ? ' · Cleared' : ''}
-                        </div>
-                        <div className="ctitle">{top.title}</div>
-                        <div className="cmeta">{top.subtopics.length} subtopics</div>
-                      </div>
-                      <div>
-                        <div className="progress-row">
-                          <div className="bar-bg">
-                            <div className="bar-fill" style={{ width: pct + '%' }} />
-                          </div>
-                          <span className="ctag">{c}/{t}</span>
-                        </div>
-                      </div>
+                      <span className="proj-eyebrow">{ppDone ? 'Completed' : phaseDone ? 'Unlocked' : 'Unlocks when phase topics are cleared'}</span>
+                      <div className="proj-title">{pp.title}{ppDone ? ' ✓' : ''}</div>
+                      <div className="proj-desc">{pp.desc}</div>
                     </motion.div>
-                  );
-                })}
-
-                {pp ? (
-                  <motion.div
-                    className="proj-card"
-                    variants={cardVariants}
-                    style={{ opacity: phaseDone || ppDone ? 1 : 0.6, cursor: 'pointer' }}
-                    onClick={() => toggle(ppKey)}
-                    role="button"
-                    tabIndex={0}
-                  >
-                    <span className="proj-eyebrow">{ppDone ? 'Completed' : phaseDone ? 'Unlocked' : 'Unlocks when phase topics are cleared'}</span>
-                    <div className="proj-title">{pp.title}{ppDone ? ' ✓' : ''}</div>
-                    <div className="proj-desc">{pp.desc}</div>
-                  </motion.div>
-                ) : null}
-              </motion.div>
-            </div>
-          );
-        })}
-      </div>
+                  ) : null}
+                </motion.div>
+              </div>
+            );
+          })}
+        </div>
+      ))}
 
       <div className="capstone">
         <div className="capstone-box" onClick={() => toggle(capstoneKey)} role="button" tabIndex={0} style={{ cursor: 'pointer' }}>

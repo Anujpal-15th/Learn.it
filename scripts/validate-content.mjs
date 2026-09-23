@@ -126,6 +126,43 @@ CAREERS.forEach((career) => {
     }
   });
 
+  // Phase tier validity (curriculum refinement) — only checked where a
+  // roadmap actually uses tiers (currently java-developer only; AI Engineer's
+  // phases don't have this field and that's fine, it's not required).
+  const VALID_TIERS = new Set(['core-foundations', 'dsa', 'backend', 'production-advanced', 'system-design', 'optional']);
+  roadmap.phases.forEach((phase, i) => {
+    if (phase.tier !== undefined && !VALID_TIERS.has(phase.tier)) {
+      fail(`[${career.id}] phase[${i}] "${phase.name}": invalid tier "${phase.tier}"`);
+    }
+  });
+
+  // A required-path topic (core-foundations/backend/production-advanced/
+  // system-design tier) must never depend on an 'optional' topic (it might
+  // never be completed) or on a LATER tier (that's a strandation bug even
+  // though it isn't a literal cycle). Only checked when every phase involved
+  // actually declares a tier.
+  const TIER_RANK = { 'core-foundations': 0, backend: 1, 'production-advanced': 2, 'system-design': 3 };
+  const tierOf = (topicId) => {
+    const owner = idOwner.get(topicId);
+    if (owner !== career.id) return undefined;
+    const t = roadmap.topics.find((x) => x.id === topicId);
+    const ph = t && roadmap.phases[t.phase];
+    return ph && ph.tier;
+  };
+  roadmap.topics.forEach((top) => {
+    const topTier = tierOf(top.id);
+    if (!(topTier in TIER_RANK)) return; // dsa/optional/undefined topics aren't required-path
+    const meta = TOPIC_META[top.id];
+    (meta ? meta.prerequisites : []).forEach((prereqId) => {
+      const prereqTier = tierOf(prereqId);
+      if (prereqTier === 'optional') {
+        fail(`[${career.id}] "${top.id}" (required, tier "${topTier}") depends on "${prereqId}" (tier "optional") — it might never be completed.`);
+      } else if (prereqTier in TIER_RANK && TIER_RANK[prereqTier] > TIER_RANK[topTier]) {
+        fail(`[${career.id}] "${top.id}" (tier "${topTier}") depends on "${prereqId}" (later tier "${prereqTier}") — this would strand the required path.`);
+      }
+    });
+  });
+
   // Every phase should have a project, and every project needs real content
   // (a broken/empty project is otherwise invisible — it just renders blank).
   if (roadmap.phaseProjects.length !== roadmap.phases.length) {

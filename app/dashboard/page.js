@@ -10,7 +10,7 @@ import { motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { CAREERS, getRoadmap, getCareer } from '@/lib/roadmaps';
-import { roadmapStats, milestoneStats, recommendNextTopic } from '@/lib/roadmap-engine';
+import { roadmapStats, tierSections, recommendNextTopic, recommendDsaPractice } from '@/lib/roadmap-engine';
 import { useProgress } from '@/components/useProgress';
 import ThemeToggle from '@/components/ThemeToggle';
 import Logo from '@/components/Logo';
@@ -33,8 +33,22 @@ export default function Dashboard() {
   const career = careerId ? getCareer(careerId) : null;
 
   const stats = useMemo(() => (roadmap ? roadmapStats(roadmap, progress) : null), [roadmap, progress]);
-  const milestones = useMemo(() => (roadmap ? milestoneStats(roadmap, progress) : []), [roadmap, progress]);
   const recommendation = useMemo(() => (roadmap ? recommendNextTopic(roadmap, progress) : null), [roadmap, progress]);
+  const dsaRecommendation = useMemo(() => (roadmap ? recommendDsaPractice(roadmap, progress) : null), [roadmap, progress]);
+
+  // One aggregate progress bar per named section (not every individual
+  // phase — that level of detail belongs on the roadmap page, not a
+  // dashboard summary) — "Java Foundation ██████ 100%, SQL ████░░ 60%" etc.
+  const sectionSummary = useMemo(() => {
+    if (!roadmap) return [];
+    return tierSections(roadmap, progress)
+      .filter((s) => s.label) // skip the untiered fallback bucket (AI Engineer)
+      .map((s) => {
+        const completed = s.phases.reduce((n, p) => n + p.topicsCompleted, 0);
+        const total = s.phases.reduce((n, p) => n + p.topicsTotal, 0);
+        return { label: s.label, completed, total, pct: total ? Math.round((completed / total) * 100) : 0 };
+      });
+  }, [roadmap, progress]);
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -166,7 +180,7 @@ export default function Dashboard() {
           {recommendation ? (
             <>
               <div className="section-label"><span>Recommended Next</span><div className="ln" /></div>
-              <div className="recommend-card" style={{ marginBottom: 40 }}>
+              <div className="recommend-card" style={{ marginBottom: 24 }}>
                 <div className="recommend-eyebrow">Because of your progress so far</div>
                 <div className="recommend-title">{recommendation.topic.title}</div>
                 <div className="recommend-reason">{recommendation.reason}</div>
@@ -177,21 +191,33 @@ export default function Dashboard() {
             </>
           ) : null}
 
-          <div className="section-label"><span>Milestones</span><div className="ln" /></div>
+          {dsaRecommendation ? (
+            <div className="recommend-card" style={{ marginBottom: 40, borderColor: 'var(--faint)', background: 'var(--paper2)' }}>
+              <div className="recommend-eyebrow">Today's DSA practice (parallel track)</div>
+              <div className="recommend-title">{dsaRecommendation.topic.title}</div>
+              <div className="recommend-reason">{dsaRecommendation.reason}</div>
+              <button className="back-btn" style={{ marginTop: 14 }} onClick={() => router.push('/topic/' + dsaRecommendation.topic.id)}>
+                Practice
+              </button>
+            </div>
+          ) : null}
+
+          <div className="section-label"><span>Progress by Section</span><div className="ln" /></div>
           <div className="milestone-track" style={{ marginBottom: 40 }}>
-            {milestones.map((m) => (
-              <div className={'milestone-row ' + m.state} key={m.index}>
-                <span className="milestone-num mono">{String(m.index + 1).padStart(2, '0')}</span>
-                <span className="milestone-name">{m.name} {m.done ? '✓' : m.state === 'upcoming' ? '🔒' : ''}</span>
+            {sectionSummary.map((s) => (
+              <div className="milestone-row" key={s.label}>
+                <span className="milestone-name">{s.label} {s.total > 0 && s.completed === s.total ? '✓' : ''}</span>
                 <div className="milestone-bar bar-bg">
-                  <div className="bar-fill" style={{ width: m.pct + '%' }} />
+                  <div className="bar-fill" style={{ width: s.pct + '%' }} />
                 </div>
-                <span className="milestone-pct mono">{m.topicsCompleted}/{m.topicsTotal}</span>
+                <span className="milestone-pct mono">{s.completed}/{s.total}</span>
               </div>
             ))}
           </div>
 
           <p style={{ textAlign: 'center', marginBottom: 40 }}>
+            <Link className="concept-more" href={'/roadmap/' + roadmap.id}>View the full roadmap →</Link>
+            {' · '}
             <Link className="concept-more" href="/">Working on the other path too? Start it from the homepage →</Link>
           </p>
         </>
