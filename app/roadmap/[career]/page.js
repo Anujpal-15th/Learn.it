@@ -16,7 +16,7 @@ import {
   phaseProjectDone,
 } from '@/lib/topics';
 import { getRoadmap, getCareer } from '@/lib/roadmaps';
-import { tierSections, roadmapStats, recommendNextTopic, recommendDsaPractice } from '@/lib/roadmap-engine';
+import { tierSections, roadmapStats, recommendNextTopic, recommendDsaPractice, numberedPhaseCount } from '@/lib/roadmap-engine';
 import { useProgress } from '@/components/useProgress';
 import ThemeToggle from '@/components/ThemeToggle';
 import Logo from '@/components/Logo';
@@ -105,7 +105,7 @@ export default function RoadmapPage() {
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       >
         <div className="eyebrow">
-          {roadmap.phases.length} phases · {roadmap.topics.length} topics · {career.label}
+          {numberedPhaseCount(roadmap)} phases · {roadmap.topics.length} topics · {career.label}
         </div>
         <h1 className="title">{career.label}</h1>
         <p className="hero-sub">{career.pitch}</p>
@@ -186,7 +186,7 @@ export default function RoadmapPage() {
           <div className="milestone-track" style={{ marginBottom: 24 }}>
             {section.phases.map((m) => (
               <div className={'milestone-row ' + m.state} key={m.index}>
-                <span className="milestone-num mono">{String(m.index + 1).padStart(2, '0')}</span>
+                <span className="milestone-num mono">{m.displayNumber ? String(m.displayNumber).padStart(2, '0') : '—'}</span>
                 <span className="milestone-name">
                   {m.name.replace(/^Phase \d+\s*—\s*/, '')} {m.done ? '✓' : m.state === 'upcoming' ? '🔒' : ''}
                 </span>
@@ -209,7 +209,7 @@ export default function RoadmapPage() {
             return (
               <div className="phase" key={pi}>
                 <div className="phase-head">
-                  <span className="phase-num mono">{String(pi + 1).padStart(2, '0')}</span>
+                  <span className="phase-num mono">{m.displayNumber ? String(m.displayNumber).padStart(2, '0') : '—'}</span>
                   <span className="phase-title">{ph.name}</span>
                 </div>
                 <div className="phase-desc">{ph.desc}</div>

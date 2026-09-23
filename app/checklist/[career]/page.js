@@ -11,7 +11,7 @@
 import { useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getRoadmap, getCareer } from '@/lib/roadmaps';
-import { readinessChecklist } from '@/lib/roadmap-engine';
+import { readinessChecklist, readinessGates } from '@/lib/roadmap-engine';
 import { useProgress } from '@/components/useProgress';
 import ThemeToggle from '@/components/ThemeToggle';
 
@@ -24,6 +24,9 @@ export default function ChecklistPage() {
   const { progress, loading, error } = useProgress();
 
   const items = useMemo(() => readinessChecklist(careerId, progress), [careerId, progress]);
+  // Named career-readiness gates from the curriculum plan — null for a
+  // roadmap with no tiers (AI Engineer), so this section just doesn't render.
+  const gates = useMemo(() => (roadmap ? readinessGates(roadmap, progress) : null), [roadmap, progress]);
   const doneCount = items.filter((i) => i.done).length;
   const completed = items.filter((i) => i.done);
   const toStrengthen = items.filter((i) => !i.done);
@@ -75,6 +78,34 @@ export default function ChecklistPage() {
         </div>
         {error ? <div className="detail-error">{error}</div> : null}
       </div>
+
+      {gates ? (
+        <>
+          <div className="sub-head">
+            <span className="sub-title">Career readiness gates</span>
+            <div className="sub-line" />
+          </div>
+          <div className="readiness-list" style={{ marginBottom: 32 }}>
+            {Object.values(gates).map((gate) => (
+              <div className="readiness-item" key={gate.label} style={{ display: 'block' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                  <span className="readiness-check">{gate.done ? '✓' : ''}</span>
+                  <span>{gate.label}</span>
+                  <span className="mono" style={{ marginLeft: 'auto', fontSize: 12 }}>
+                    {gate.completed}/{gate.total}
+                  </span>
+                </div>
+                <div className="bar-bg">
+                  <div
+                    className="bar-fill"
+                    style={{ width: (gate.total ? Math.round((gate.completed / gate.total) * 100) : 0) + '%' }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : null}
 
       <div className="sub-head">
         <span className="sub-title">Learning areas completed</span>
