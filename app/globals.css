@@ -226,6 +226,11 @@ a {
   border-color: var(--faint);
 }
 
+.tab.current {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
 .tab .dot {
   width: 6px;
   height: 6px;
@@ -1843,66 +1848,143 @@ footer {
   padding-top: 12px;
 }
 
-/* --- Milestone track (roadmap page phase navigator) --- */
-.milestone-track {
+/* --- Roadmap list (one row per topic, status-coded) --- */
+.roadmap-list {
   display: flex;
   flex-direction: column;
-  margin-bottom: 32px;
   border-top: 1px solid var(--faint);
 }
 
-.milestone-row {
+.roadmap-row {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 12px 4px;
-  border: none;
+  padding: 13px 4px;
   border-bottom: 1px solid var(--faint);
-  border-radius: 0;
-  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s;
 }
 
-.milestone-row.current {
+.roadmap-row:hover {
   background: var(--accent-soft);
 }
 
-.milestone-row.upcoming {
-  opacity: 0.5;
-}
-
-.milestone-num {
-  font-family: var(--font-mono), monospace;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--mid);
-  width: 24px;
+.roadmap-row-status {
+  width: 18px;
   flex-shrink: 0;
+  text-align: center;
+  font-family: var(--font-mono), monospace;
+  color: var(--mid);
 }
 
-.milestone-name {
+.roadmap-row.done .roadmap-row-status {
+  color: var(--accent);
+}
+
+.roadmap-row.current .roadmap-row-status {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.roadmap-row-body {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.roadmap-row-name {
   font-weight: 600;
   font-size: 14px;
-  min-width: 0;
 }
 
-.milestone-bar {
-  width: 100px;
-  flex-shrink: 0;
-}
-
-.milestone-pct {
-  font-family: var(--font-mono), monospace;
-  font-size: 12px;
+.roadmap-row.done .roadmap-row-name {
   color: var(--mid);
-  width: 42px;
-  text-align: right;
+  font-weight: 500;
+}
+
+.roadmap-row-sub {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  color: var(--accent);
+  margin-top: 2px;
+}
+
+.roadmap-row-count {
+  font-size: 11px;
+  color: var(--mid);
   flex-shrink: 0;
 }
 
-@media (max-width: 640px) {
-  .milestone-bar {
-    display: none;
+/* --- Topic page stepper (subtopics + quiz + project, one open at a time) --- */
+.stepper {
+  margin-top: 8px;
+}
+
+.step {
+  border-bottom: 1px solid var(--faint);
+}
+
+.step-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 4px;
+  cursor: pointer;
+}
+
+.step-status {
+  width: 20px;
+  flex-shrink: 0;
+  text-align: center;
+  font-family: var(--font-mono), monospace;
+  color: var(--mid);
+}
+
+.step.done .step-status {
+  color: var(--accent);
+}
+
+.step.open .step-status {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.step-title {
+  flex: 1;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-size: 17px;
+}
+
+.step.done:not(.open) .step-title {
+  color: var(--mid);
+  font-weight: 500;
+}
+
+.step-count {
+  font-size: 11px;
+  color: var(--mid);
+  flex-shrink: 0;
+}
+
+.step-body {
+  padding: 0 4px 28px 34px;
+}
+
+/* --- Practice hub tile grid (reuses .card) --- */
+.practice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--faint);
+  border: 1px solid var(--faint);
+  margin-top: 24px;
+}
+
+@media (max-width: 900px) {
+  .practice-grid {
+    grid-template-columns: repeat(1, 1fr);
   }
 }
 
