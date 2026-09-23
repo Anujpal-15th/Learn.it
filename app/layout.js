@@ -1,4 +1,5 @@
 import { Sora, Inter, JetBrains_Mono } from 'next/font/google';
+import { MotionConfig } from 'motion/react';
 import './globals.css';
 
 // New design system (v2): Sora for display/headings, Inter for body/UI —
@@ -52,7 +53,15 @@ export default function RootLayout({ children }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body>{children}</body>
+      <body>
+        {/* Phase 2 accessibility fix: the CSS `prefers-reduced-motion` rule
+            in globals.css only disables plain CSS transitions/animations —
+            it has no effect on Framer Motion's JS-driven animations (spring
+            hovers, stagger reveals, etc.) used throughout the app.
+            reducedMotion="user" makes every motion.* component here
+            automatically honor the OS-level setting instead. */}
+        <MotionConfig reducedMotion="user">{children}</MotionConfig>
+      </body>
     </html>
   );
 }

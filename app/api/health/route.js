@@ -1,17 +1,25 @@
-// Phase 1 verification route. Confirms the DB connection works and that
-// ensureSchema() creates the two tables. Visit /api/health after setting
-// DATABASE_URL. This is a dev diagnostic, not a product feature — safe to
-// remove once the app is fully built.
+// Dev diagnostic route — confirms the DB connection works and that
+// ensureSchema() creates the tables. Not a product feature.
+//
+// Security (Phase 2 hardening): this is unauthenticated by design (it's used
+// to verify DB connectivity before there's any user to log in as), so it
+// must never leak internal error details (connection strings, DB error
+// messages, schema info) to an anonymous caller, and is disabled outright in
+// production — a live deployment has no legitimate reason to expose even a
+// generic DB-status probe to the public internet.
 
 import { ensureSchema, query } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  if (process.env.NODE_ENV === 'production') {
+    return Response.json({ error: 'Not found.' }, { status: 404 });
+  }
+
   try {
     await ensureSchema();
 
-    // Confirm both tables now exist in the current database.
     const { rows } = await query(
       `SELECT table_name
          FROM information_schema.tables
@@ -28,12 +36,7 @@ export async function GET() {
       tables,
     });
   } catch (err) {
-    return Response.json(
-      {
-        ok: false,
-        error: err.message || 'Database health check failed.',
-      },
-      { status: 500 }
-    );
+    console.error('[api/health]', err.message);
+    return Response.json({ ok: false, error: 'Database health check failed.' }, { status: 500 });
   }
 }

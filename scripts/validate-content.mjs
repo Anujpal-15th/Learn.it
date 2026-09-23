@@ -2,12 +2,13 @@
 // Run with: npm run validate
 //
 // Checks: duplicate/missing topic ids, broken prerequisite references,
-// cross-roadmap prerequisite leaks, invalid difficulty values, topics whose
-// phase index doesn't exist (orphaned topics), malformed resource links
-// (missing label/url or an unparsable/non-http(s) URL), malformed quiz
-// questions (wrong option count, out-of-range correct index, missing
-// explanation), and job-readiness checklist items referencing topics that
-// don't exist.
+// circular prerequisite chains, cross-roadmap prerequisite leaks, invalid
+// difficulty values and malformed estimated-time strings, topics whose phase
+// index doesn't exist (orphaned topics), broken phase projects, malformed
+// resource links (missing label/url or an unparsable/non-http(s) URL),
+// malformed quiz questions (wrong option count, out-of-range correct index,
+// missing explanation, duplicate question text within a topic), and
+// job-readiness checklist items referencing topics that don't exist.
 //
 // Exits 1 on any failure so this is CI/pre-deploy friendly.
 
@@ -48,11 +49,14 @@ function checkResource(resource, context) {
 }
 
 function checkQuiz(quiz, context) {
+  const seenQuestions = new Set();
   (quiz || []).forEach((q, qi) => {
     const label = `${context} quiz[${qi}]`;
     if (!q.q || typeof q.q !== 'string') fail(`${label}: missing question text`);
     if (!Array.isArray(q.options) || q.options.length !== 4) {
       fail(`${label}: must have exactly 4 options`);
+    } else if (new Set(q.options).size !== q.options.length) {
+      fail(`${label}: has duplicate answer options`);
     }
     if (typeof q.correct !== 'number' || q.correct < 0 || q.correct > 3) {
       fail(`${label}: correct index out of range (${q.correct})`);
@@ -60,8 +64,17 @@ function checkQuiz(quiz, context) {
     if (!q.explanation || typeof q.explanation !== 'string') {
       fail(`${label}: missing explanation`);
     }
+    if (q.q) {
+      if (seenQuestions.has(q.q)) fail(`${label}: duplicate question text within the same topic`);
+      seenQuestions.add(q.q);
+    }
   });
 }
+
+// A malformed estimated-time string (roadmap-meta.js) silently renders as
+// garbage on the topic page instead of failing loudly, so check the shape
+// explicitly: "<number>[–-]<number> hrs" (en dash or hyphen).
+const TIME_PATTERN = /^\d+[–-]\d+ hrs$/;
 
 // --- Build a global id registry across both roadmaps ---
 const allTopicIds = new Set();
@@ -113,16 +126,22 @@ CAREERS.forEach((career) => {
     }
   });
 
-  // Every phase should have a project.
+  // Every phase should have a project, and every project needs real content
+  // (a broken/empty project is otherwise invisible — it just renders blank).
   if (roadmap.phaseProjects.length !== roadmap.phases.length) {
     fail(`[${career.id}]: ${roadmap.phases.length} phases but ${roadmap.phaseProjects.length} phase projects`);
   }
-  if (!roadmap.capstone || !roadmap.capstone.title) {
-    fail(`[${career.id}]: missing capstone`);
+  roadmap.phaseProjects.forEach((p, i) => {
+    if (!p || !p.title || !p.desc) {
+      fail(`[${career.id}] phase project [${i}]: missing title or desc`);
+    }
+  });
+  if (!roadmap.capstone || !roadmap.capstone.title || !roadmap.capstone.desc) {
+    fail(`[${career.id}]: missing or incomplete capstone`);
   }
 });
 
-// --- Metadata: difficulty + prerequisites ---
+// --- Metadata: difficulty + estimated time + prerequisites ---
 Object.entries(TOPIC_META).forEach(([topicId, meta]) => {
   const context = `roadmap-meta "${topicId}"`;
   if (!allTopicIds.has(topicId)) {
@@ -132,14 +151,54 @@ Object.entries(TOPIC_META).forEach(([topicId, meta]) => {
   if (!DIFFICULTY[meta.difficulty]) {
     fail(`${context}: invalid difficulty "${meta.difficulty}"`);
   }
+  if (!meta.estimatedTime || !TIME_PATTERN.test(meta.estimatedTime)) {
+    fail(`${context}: invalid estimated time "${meta.estimatedTime}" (expected e.g. "4–6 hrs")`);
+  }
   const ownerCareer = idOwner.get(topicId);
   (meta.prerequisites || []).forEach((prereqId) => {
     if (!allTopicIds.has(prereqId)) {
-      fail(`${context}: prerequisite "${prereqId}" does not exist in any roadmap`);
+      fail(`ERROR: Topic "${topicId}" requires "${prereqId}", but "${prereqId}" does not exist.`);
     } else if (idOwner.get(prereqId) !== ownerCareer) {
       fail(`${context}: prerequisite "${prereqId}" belongs to a different roadmap (${idOwner.get(prereqId)})`);
     }
   });
+});
+
+// --- Circular prerequisites: a topic can't (transitively) require itself ---
+// Standard DFS 3-color cycle detection (white/gray/black), O(V+E) — a naive
+// "restart DFS from every node, track visited-by-path" approach blows up
+// exponentially on an actual cycle (every node keeps getting re-explored via
+// every path through the cycle), which is exactly the kind of thing this
+// self-check exists to catch before it ships.
+const GRAY = 1;
+const BLACK = 2;
+const color = {};
+const reportedCycles = new Set();
+
+function visit(id, path) {
+  color[id] = GRAY;
+  path.push(id);
+  const meta = TOPIC_META[id];
+  for (const prereqId of (meta && meta.prerequisites) || []) {
+    if (!TOPIC_META[prereqId]) continue; // broken ref already reported above
+    if (color[prereqId] === GRAY) {
+      const idx = path.indexOf(prereqId);
+      const cycle = [...path.slice(idx), prereqId];
+      const signature = [...new Set(cycle)].sort().join(',');
+      if (!reportedCycles.has(signature)) {
+        reportedCycles.add(signature);
+        fail(`Circular prerequisite chain: ${cycle.join(' → ')}`);
+      }
+    } else if (color[prereqId] !== BLACK) {
+      visit(prereqId, path);
+    }
+  }
+  path.pop();
+  color[id] = BLACK;
+}
+
+Object.keys(TOPIC_META).forEach((topicId) => {
+  if (color[topicId] === undefined) visit(topicId, []);
 });
 
 // Every topic should ideally have metadata — warn, don't fail (a sensible

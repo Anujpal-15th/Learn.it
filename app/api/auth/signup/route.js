@@ -22,10 +22,10 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
     }
 
-    const email = (body.email || '').trim().toLowerCase();
-    const password = body.password || '';
+    const email = (body.email || '').trim().toLowerCase().slice(0, 254);
+    const password = (body.password || '').slice(0, 200);
     // Default the name to the part before @ if not provided.
-    const name = (body.name || '').trim() || email.split('@')[0];
+    const name = ((body.name || '').trim() || email.split('@')[0]).slice(0, 100);
 
     if (!isValidEmail(email)) {
       return NextResponse.json(
@@ -33,9 +33,9 @@ export async function POST(request) {
         { status: 400 }
       );
     }
-    if (password.length < 6) {
+    if (password.length < 8) {
       return NextResponse.json(
-        { error: 'Password must be at least 6 characters.' },
+        { error: 'Password must be at least 8 characters.' },
         { status: 400 }
       );
     }
@@ -51,7 +51,7 @@ export async function POST(request) {
       );
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 12);
 
     const inserted = await query(
       `INSERT INTO users (email, name, password_hash)
@@ -74,9 +74,7 @@ export async function POST(request) {
     res.cookies.set(COOKIE_NAME, token, sessionCookieOptions());
     return res;
   } catch (err) {
-    return NextResponse.json(
-      { error: err.message || 'Could not create account.' },
-      { status: 500 }
-    );
+    console.error('[api/auth/signup]', err.message);
+    return NextResponse.json({ error: 'Could not create account.' }, { status: 500 });
   }
 }

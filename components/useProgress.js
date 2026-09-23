@@ -4,6 +4,13 @@
 // Loads the session + saved progress, and exposes an optimistic toggle that
 // persists the full data blob to /api/progress. Toggling also updates the
 // daily growth log so the dashboard's activity grid reflects real solves.
+//
+// Concurrency: writes are optimistically-locked on a server-side `version`
+// counter (see app/api/progress/route.js). A POST based on a stale version
+// gets a 409 back with the current server state instead of silently
+// clobbering whatever another tab/device just saved — commit() below reacts
+// to that by re-applying the SAME intended change on top of the fresh state
+// and retrying, so neither tab's change is lost.
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -11,6 +18,8 @@ import { useRouter } from 'next/navigation';
 function todayKey() {
   return new Date().toISOString().slice(0, 10);
 }
+
+const MAX_RETRIES = 3;
 
 export function useProgress() {
   const router = useRouter();
@@ -22,7 +31,7 @@ export function useProgress() {
   const [error, setError] = useState('');
 
   // Always POST the freshest data, even if two toggles land back-to-back.
-  const latest = useRef({ progress: {}, growth: {}, meta: {} });
+  const latest = useRef({ progress: {}, growth: {}, meta: {}, version: 0 });
 
   useEffect(() => {
     let active = true;
@@ -41,13 +50,20 @@ export function useProgress() {
           return;
         }
         const me = await meRes.json();
-        const data = progRes.ok ? await progRes.json() : { progress: {}, growth: {}, meta: {} };
+        const data = progRes.ok
+          ? await progRes.json()
+          : { progress: {}, growth: {}, meta: {}, version: 0 };
         if (!active) return;
         setUser(me.user);
         setProgress(data.progress || {});
         setGrowth(data.growth || {});
         setMeta(data.meta || {});
-        latest.current = { progress: data.progress || {}, growth: data.growth || {}, meta: data.meta || {} };
+        latest.current = {
+          progress: data.progress || {},
+          growth: data.growth || {},
+          meta: data.meta || {},
+          version: data.version || 0,
+        };
         setLoading(false);
       } catch {
         router.replace('/login');
@@ -62,52 +78,83 @@ export function useProgress() {
     return !!progress[id];
   }
 
-  // Applies a next { progress, growth, meta } optimistically, persists it,
-  // and rolls back to prev on failure. Any field a caller doesn't change
-  // just passes through unchanged from latest.current.
-  async function commit(next, prev) {
-    setProgress(next.progress);
-    setGrowth(next.growth);
-    setMeta(next.meta);
-    latest.current = next;
-    setError('');
+  // applyFn(base) -> { progress, growth, meta } describes the intended
+  // change as a function of whatever base state turns out to be current,
+  // not a value precomputed from a snapshot that might already be stale —
+  // that's what lets a 409 retry reapply the same intent onto fresh data.
+  async function commit(applyFn) {
+    const original = latest.current;
+    let base = original;
 
-    try {
-      const res = await fetch('/api/progress', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(next),
-      });
-      if (!res.ok) throw new Error('save failed');
-    } catch {
-      setProgress(prev.progress);
-      setGrowth(prev.growth);
-      setMeta(prev.meta);
-      latest.current = prev;
-      setError('Could not save — check your connection and try again.');
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      const next = applyFn(base);
+      setProgress(next.progress);
+      setGrowth(next.growth);
+      setMeta(next.meta);
+
+      try {
+        const res = await fetch('/api/progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...next, version: base.version }),
+        });
+
+        if (res.status === 409) {
+          const body = await res.json();
+          base = body.current; // fresh server state; retry with it as the new base
+          continue;
+        }
+
+        if (!res.ok) throw new Error('save failed');
+
+        const saved = await res.json();
+        const finalState = { ...next, version: saved.version };
+        latest.current = finalState;
+        setError('');
+        return;
+      } catch {
+        setProgress(original.progress);
+        setGrowth(original.growth);
+        setMeta(original.meta);
+        latest.current = original;
+        setError('Could not save — check your connection and try again.');
+        return;
+      }
     }
+
+    // Exhausted retries under sustained contention — roll back the optimistic
+    // UI to the last confirmed state rather than leaving it showing a change
+    // that was never actually persisted.
+    setProgress(original.progress);
+    setGrowth(original.growth);
+    setMeta(original.meta);
+    latest.current = original;
+    setError('Could not save — this account is being updated elsewhere right now. Please refresh and try again.');
   }
 
   async function toggle(id) {
-    const prev = latest.current;
-    const wasDone = !!prev.progress[id];
-    const nextProgress = { ...prev.progress, [id]: !wasDone };
-    if (wasDone) delete nextProgress[id];
+    await commit((base) => {
+      const wasDone = !!base.progress[id];
+      const nextProgress = { ...base.progress, [id]: !wasDone };
+      if (wasDone) delete nextProgress[id];
 
-    const key = todayKey();
-    const delta = wasDone ? -1 : 1;
-    const nextGrowth = { ...prev.growth };
-    nextGrowth[key] = Math.max(0, (nextGrowth[key] || 0) + delta);
+      const key = todayKey();
+      const delta = wasDone ? -1 : 1;
+      const nextGrowth = { ...base.growth };
+      nextGrowth[key] = Math.max(0, (nextGrowth[key] || 0) + delta);
 
-    await commit({ progress: nextProgress, growth: nextGrowth, meta: prev.meta }, prev);
+      return { progress: nextProgress, growth: nextGrowth, meta: base.meta };
+    });
   }
 
   // Persists which career the learner is currently on — read by /dashboard
   // (empty state vs. personalized hub) and set from the homepage / roadmap page.
   async function setSelectedCareer(careerId) {
-    const prev = latest.current;
-    const nextMeta = { ...prev.meta, selectedCareer: careerId };
-    await commit({ progress: prev.progress, growth: prev.growth, meta: nextMeta }, prev);
+    await commit((base) => ({
+      progress: base.progress,
+      growth: base.growth,
+      meta: { ...base.meta, selectedCareer: careerId },
+    }));
   }
 
   return { user, progress, growth, meta, loading, error, isDone, toggle, setSelectedCareer };

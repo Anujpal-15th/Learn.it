@@ -1,8 +1,12 @@
 'use client';
 
-// Job-readiness checklist — not a guarantee of employment, just a rollup of
-// which named skill areas are complete for this career, computed from the
-// same topic/interview/project completion data as everything else.
+// Learning-readiness checklist — explicitly NOT a job-readiness or
+// employment signal. It's a rollup of which named skill areas are complete
+// for this career vs. which still need work, computed from the same
+// topic/interview/project completion data as everything else. Framed as
+// "learning areas completed" / "recommended areas to strengthen" rather
+// than "you are job-ready," on purpose — this app is a progress tracker,
+// not an employment predictor.
 
 import { useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -21,6 +25,8 @@ export default function ChecklistPage() {
 
   const items = useMemo(() => readinessChecklist(careerId, progress), [careerId, progress]);
   const doneCount = items.filter((i) => i.done).length;
+  const completed = items.filter((i) => i.done);
+  const toStrengthen = items.filter((i) => !i.done);
 
   if (loading) {
     return (
@@ -54,29 +60,57 @@ export default function ChecklistPage() {
       </div>
 
       <div className="detail-head">
-        <div className="detail-num mono">JOB-READINESS CHECKLIST</div>
+        <div className="detail-num mono">LEARNING READINESS CHECKLIST</div>
         <div className="detail-title">{career.label}</div>
         <div className="detail-sub">
-          This is not a guarantee of employment — it's a checklist showing
-          which learning areas you've completed toward {career.label}.
+          This is not a guarantee of employment and it does not predict
+          whether you'll get hired — it's a checklist of learning areas
+          completed toward {career.label}, and which ones to strengthen next.
         </div>
         <div className="detail-progress">
           <div className="bar-bg">
             <div className="bar-fill" style={{ width: (items.length ? Math.round((doneCount / items.length) * 100) : 0) + '%' }} />
           </div>
-          <span className="mono" style={{ fontSize: 12 }}>{doneCount}/{items.length} ready</span>
+          <span className="mono" style={{ fontSize: 12 }}>{doneCount}/{items.length} completed</span>
         </div>
         {error ? <div className="detail-error">{error}</div> : null}
       </div>
 
-      <div className="readiness-list">
-        {items.map((item) => (
-          <div className={'readiness-item' + (item.done ? ' done' : '')} key={item.label}>
-            <span className="readiness-check">{item.done ? '✓' : ''}</span>
-            <span>{item.label}</span>
-          </div>
-        ))}
+      <div className="sub-head">
+        <span className="sub-title">Learning areas completed</span>
+        <div className="sub-line" />
+        <span className="sub-count mono">{completed.length}</span>
       </div>
+      {completed.length ? (
+        <div className="readiness-list" style={{ marginBottom: 32 }}>
+          {completed.map((item) => (
+            <div className="readiness-item done" key={item.label}>
+              <span className="readiness-check">✓</span>
+              <span>{item.label}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="hero-sub" style={{ marginBottom: 32 }}>None yet — every area below is still open.</p>
+      )}
+
+      <div className="sub-head">
+        <span className="sub-title">Recommended areas to strengthen</span>
+        <div className="sub-line" />
+        <span className="sub-count mono">{toStrengthen.length}</span>
+      </div>
+      {toStrengthen.length ? (
+        <div className="readiness-list">
+          {toStrengthen.map((item) => (
+            <div className="readiness-item" key={item.label}>
+              <span className="readiness-check" />
+              <span>{item.label}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="hero-sub">Every learning area for {career.label} is complete.</p>
+      )}
     </div>
   );
 }
