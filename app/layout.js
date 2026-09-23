@@ -1,14 +1,16 @@
-import { Sora, Inter, JetBrains_Mono } from 'next/font/google';
+import { Fraunces, Inter, JetBrains_Mono } from 'next/font/google';
 import { MotionConfig } from 'motion/react';
 import './globals.css';
 
-// New design system (v2): Sora for display/headings, Inter for body/UI —
-// the professional-product pairing (Linear/Vercel/Raycast-style), replacing
-// the earlier condensed-display/mono-heavy "dossier" look. Self-hosted via
-// next/font — no render-blocking external request.
-const sora = Sora({
+// Design system (v3, "Field Notes"): Fraunces — an editorial serif with a
+// real italic — for display/headings, Inter for body/UI. Replaces v2's
+// Sora/Inter "professional SaaS product" pairing at the user's direct
+// request (too generic — could have been any dashboard template). Self-
+// hosted via next/font — no render-blocking external request.
+const fraunces = Fraunces({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
+  weight: ['500', '600'],
+  style: ['normal', 'italic'],
   variable: '--font-display',
   display: 'swap',
 });
@@ -48,7 +50,7 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${sora.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+      className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable}`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />

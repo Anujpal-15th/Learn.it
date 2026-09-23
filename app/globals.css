@@ -1,51 +1,54 @@
-/* globals.css — The Ledger design system (v2).
-   A calm, professional product UI — soft surfaces, one accent color, real
-   elevation instead of hard borders, restrained motion. Replaces the earlier
-   strict black/white grid "dossier" look at the user's direct request (too
-   visually harsh, the persistent background grid was the main complaint).
-   Fonts are loaded via next/font in app/layout.js (self-hosted, no
-   render-blocking external request) and exposed here as CSS variables. */
+/* globals.css — The Ledger design system (v3, "Field Notes").
+   An editorial, printed-course-catalog feel: warm ivory paper, a serif
+   display face with real character, sharp corners, hairline rules instead
+   of floating drop-shadows, and one considered accent — deep pine, not a
+   default-Tailwind-green button color. Replaces v2's "calm professional
+   SaaS dashboard" look at the user's direct request (too generic — could
+   have been any product). Fonts are loaded via next/font in app/layout.js
+   (self-hosted, no render-blocking external request) and exposed here as
+   CSS variables. */
 
 :root {
-  --ink: #17181c;        /* primary text — soft near-black, not pure #000 */
-  --paper: #fafafa;      /* page background */
-  --paper2: #ffffff;     /* card/surface background */
-  --faint: #e7e7ea;      /* borders, dividers — low-contrast, not a grid */
-  --mid: #6f7178;        /* secondary/muted text */
-  --accent: #16a34a;     /* one considered accent — primary actions, progress, checks */
-  --accent-ink: #ffffff; /* text/icon color on top of --accent */
-  --accent-soft: #e7f6ec; /* tinted background for accent chips/badges */
-  --gday-l1: #cdeed9;    /* activity grid: light activity, steps toward --accent */
-  --gday-l2: #7ecb9a;
-  --gday-l3: #2fa860;
-  --topbar-bg: rgba(250, 250, 250, 0.85);
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --shadow-sm: 0 1px 2px rgba(23, 24, 28, 0.05), 0 1px 1px rgba(23, 24, 28, 0.04);
-  --shadow-md: 0 4px 12px rgba(23, 24, 28, 0.06), 0 2px 4px rgba(23, 24, 28, 0.04);
-  --shadow-lg: 0 16px 40px rgba(23, 24, 28, 0.10), 0 4px 12px rgba(23, 24, 28, 0.05);
+  --ink: #1d1a13;         /* primary text — warm near-black, not pure #000 */
+  --paper: #f5f1e6;       /* page background — warm ivory, not grey/white */
+  --paper2: #fffcf5;      /* card/surface background — slightly lifted off the page */
+  --faint: #ddd3ba;       /* borders, dividers — a warm hairline, not a cool grey */
+  --mid: #78715e;         /* secondary/muted text */
+  --accent: #2f5d3f;      /* one considered accent — deep pine, not stock SaaS green */
+  --accent-ink: #fbf8f0;  /* text/icon color on top of --accent */
+  --accent-soft: #e2e6da; /* tinted background for accent chips/badges */
+  --gday-l1: #e6ddc4;     /* activity grid: light activity, steps toward --accent */
+  --gday-l2: #9db98e;
+  --gday-l3: #4f8a5f;
+  --topbar-bg: rgba(245, 241, 230, 0.88);
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --shadow-sm: none;
+  --shadow-md: 0 1px 0 rgba(29, 26, 19, 0.06);
+  --shadow-lg: 0 24px 56px rgba(29, 26, 19, 0.16), 0 4px 12px rgba(29, 26, 19, 0.08);
 }
 
-/* Dark mode: same soft, accented system — deep neutral surfaces instead of
-   pure black, the accent lightened for contrast. Applied via a data-theme
-   attribute set by app/layout.js's pre-hydration script + ThemeToggle. */
+/* Dark mode: the same warm, editorial system — a deep warm charcoal
+   instead of blue-black, the accent lightened for contrast. Applied via a
+   data-theme attribute set by app/layout.js's pre-hydration script +
+   ThemeToggle. */
 :root[data-theme='dark'] {
-  --ink: #eeeef0;
-  --paper: #0d0e11;
-  --paper2: #17181c;
-  --faint: #2a2c32;
-  --mid: #93949c;
-  --accent: #34c471;
-  --accent-ink: #0d0e11;
-  --accent-soft: #17301f;
-  --gday-l1: #17301f;
-  --gday-l2: #22623a;
-  --gday-l3: #2e9a56;
-  --topbar-bg: rgba(13, 14, 17, 0.85);
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.45);
+  --ink: #efe9da;
+  --paper: #14120d;
+  --paper2: #1d1a13;
+  --faint: #34301f;
+  --mid: #a49a80;
+  --accent: #6ba57e;
+  --accent-ink: #0e1810;
+  --accent-soft: #223022;
+  --gday-l1: #2a2718;
+  --gday-l2: #3d5a3c;
+  --gday-l3: #578f5f;
+  --topbar-bg: rgba(20, 18, 13, 0.88);
+  --shadow-sm: none;
+  --shadow-md: 0 1px 0 rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 28px 64px rgba(0, 0, 0, 0.55), 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
 * {
@@ -74,6 +77,7 @@ body {
 
 .mono {
   font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
 }
 
 a {
@@ -104,20 +108,26 @@ a {
   font-family: var(--font-mono), monospace;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.5px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
   color: var(--accent);
-  background: var(--accent-soft);
-  padding: 6px 14px;
-  border-radius: 999px;
-  margin-bottom: 24px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--accent);
+  margin-bottom: 28px;
 }
 
 .boot h1 {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 700;
-  font-size: clamp(36px, 5.6vw, 72px);
-  line-height: 1.05;
-  letter-spacing: -1.5px;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-style: italic;
+  font-size: clamp(38px, 5.8vw, 76px);
+  line-height: 1.02;
+  letter-spacing: -0.5px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
 }
 
 .boot h1 .out {
@@ -126,7 +136,7 @@ a {
 
 .boot .sub {
   max-width: 600px;
-  margin-top: 20px;
+  margin-top: 22px;
   font-size: 17px;
   line-height: 1.65;
   color: var(--mid);
@@ -152,11 +162,6 @@ a {
   animation: pulse 2s infinite;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
-}
-
 /* --- Top bar --- */
 .topbar {
   position: sticky;
@@ -166,7 +171,7 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px 32px;
+  padding: 16px 32px;
   background: var(--topbar-bg);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--faint);
@@ -179,15 +184,16 @@ a {
 }
 
 .topbar .brand .mark {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: -0.3px;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-style: italic;
+  font-size: 19px;
+  letter-spacing: -0.2px;
 }
 
 .topbar .brand .sub {
-  font-family: var(--font-body), sans-serif;
-  font-size: 13px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
   font-weight: 500;
   color: var(--mid);
 }
@@ -195,30 +201,29 @@ a {
 .topbar .nav {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .tab {
   font-family: var(--font-body), sans-serif;
   font-size: 13px;
   font-weight: 600;
-  border: 1px solid var(--faint);
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  padding: 8px 14px;
-  background: var(--paper2);
+  padding: 8px 13px;
+  background: transparent;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: var(--ink);
-  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+  color: var(--mid);
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 
 .tab:hover {
   background: var(--accent-soft);
   color: var(--accent);
-  border-color: var(--accent);
-  transform: translateY(-1px);
+  border-color: var(--faint);
 }
 
 .tab .dot {
@@ -246,20 +251,21 @@ a {
   font-family: var(--font-mono), monospace;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.5px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
   color: var(--accent);
-  background: var(--accent-soft);
-  padding: 6px 14px;
-  border-radius: 999px;
-  margin-bottom: 24px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--accent);
+  margin-bottom: 26px;
 }
 
 h1.title {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 700;
-  font-size: clamp(36px, 5.6vw, 72px);
-  line-height: 1.05;
-  letter-spacing: -1.5px;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-style: italic;
+  font-size: clamp(38px, 5.8vw, 76px);
+  line-height: 1.02;
+  letter-spacing: -0.5px;
 }
 
 h1.title .out {
@@ -268,7 +274,7 @@ h1.title .out {
 
 .hero-sub {
   max-width: 620px;
-  margin-top: 20px;
+  margin-top: 22px;
   font-size: 17px;
   line-height: 1.65;
   color: var(--mid);
@@ -276,38 +282,65 @@ h1.title .out {
 }
 
 .ledger {
-  margin-top: 40px;
+  margin-top: 44px;
+  padding: 0 32px;
+  max-width: 1600px;
+  margin-left: auto;
+  margin-right: auto;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--faint);
+}
+
+/* .ledger sits inside .hero on some pages (roadmap) and as a direct
+   sibling of it on others (dashboard) — its own padding above covers the
+   sibling case; when it's nested, .hero's padding already applies, so
+   don't double it up. */
+.hero .ledger {
+  padding-left: 0;
+  padding-right: 0;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .ledger .cell {
-  padding: 20px 22px;
-  background: var(--paper2);
-  border: 1px solid var(--faint);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+  padding: 22px 22px 20px;
+  border-right: 1px solid var(--faint);
+}
+
+.ledger .cell:last-child {
+  border-right: none;
 }
 
 .ledger .num {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 700;
-  font-size: 30px;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-size: 32px;
   letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
 }
 
 .ledger .lbl {
-  font-family: var(--font-body), sans-serif;
-  font-size: 12px;
+  font-family: var(--font-mono), monospace;
+  font-size: 10.5px;
   font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
   color: var(--mid);
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 @media (max-width: 720px) {
   .ledger {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .ledger .cell:nth-child(2n) {
+    border-right: none;
+  }
+  .ledger .cell:nth-child(n+3) {
+    border-top: 1px solid var(--faint);
   }
 }
 
@@ -339,7 +372,7 @@ h1.title .out {
   aspect-ratio: 1;
   background: var(--paper2);
   border: 1px solid var(--faint);
-  border-radius: 3px;
+  border-radius: 2px;
 }
 .gday.l1 { background: var(--gday-l1); border-color: transparent; }
 .gday.l2 { background: var(--gday-l2); border-color: transparent; }
@@ -351,17 +384,26 @@ h1.title .out {
   max-width: 1600px;
   margin: 0 auto 8px;
   padding: 0 32px;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
 }
 
 .section-label .ln {
-  display: none;
+  display: block;
+  flex: 1;
+  height: 1px;
+  background: var(--faint);
+  transform: translateY(-6px);
 }
 
 .section-label span {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 700;
-  font-size: 22px;
-  letter-spacing: -0.4px;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-style: italic;
+  font-size: 23px;
+  letter-spacing: -0.2px;
+  white-space: nowrap;
 }
 
 /* --- Phase + topic grid --- */
@@ -374,39 +416,41 @@ h1.title .out {
 .phase-head {
   display: flex;
   align-items: baseline;
-  gap: 14px;
-  margin: 52px 0 6px;
+  gap: 16px;
+  margin: 56px 0 8px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--ink);
 }
 
 .phase-num {
   font-family: var(--font-mono), monospace;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   color: var(--accent);
-  background: var(--accent-soft);
-  padding: 3px 9px;
-  border-radius: 999px;
+  letter-spacing: 0.5px;
 }
 
 .phase-title {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 700;
-  font-size: 20px;
-  letter-spacing: -0.3px;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-size: 21px;
+  letter-spacing: -0.2px;
 }
 
 .phase-desc {
   color: var(--mid);
   font-weight: 400;
   font-size: 14px;
-  margin: 6px 0 20px;
+  margin: 10px 0 20px;
   max-width: 640px;
 }
 
 .topic-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  gap: 1px;
+  background: var(--faint);
+  border: 1px solid var(--faint);
 }
 
 @media (max-width: 900px) {
@@ -416,13 +460,13 @@ h1.title .out {
 }
 
 .card {
-  border: 1px solid var(--faint);
-  border-radius: var(--radius-md);
+  border: none;
+  border-radius: 0;
   background: var(--paper2);
   padding: 24px 22px;
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: none;
+  transition: background 0.15s ease;
   min-height: 190px;
   display: flex;
   flex-direction: column;
@@ -430,8 +474,7 @@ h1.title .out {
 }
 
 .card:hover {
-  box-shadow: var(--shadow-lg);
-  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .cnum {
@@ -442,9 +485,9 @@ h1.title .out {
 }
 
 .ctitle {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 700;
-  font-size: 17px;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-size: 18px;
   margin-top: 10px;
   line-height: 1.25;
 }
@@ -465,16 +508,16 @@ h1.title .out {
 
 .bar-bg {
   flex: 1;
-  height: 6px;
+  height: 4px;
   background: var(--faint);
-  border-radius: 999px;
+  border-radius: 0;
   overflow: hidden;
 }
 
 .bar-fill {
   height: 100%;
   background: var(--accent);
-  border-radius: 999px;
+  border-radius: 0;
   width: 0%;
   transition: width 0.6s ease;
 }
@@ -488,8 +531,9 @@ h1.title .out {
 
 /* --- Phase project card --- */
 .proj-card {
-  border: 1px dashed var(--accent);
-  border-radius: var(--radius-md);
+  border: none;
+  border-left: 3px solid var(--accent);
+  border-radius: 0;
   background: var(--accent-soft);
   padding: 24px 22px;
   display: flex;
@@ -509,20 +553,17 @@ h1.title .out {
   font-family: var(--font-mono), monospace;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
   text-transform: uppercase;
-  background: var(--accent);
-  color: var(--accent-ink);
+  color: var(--accent);
   display: inline-block;
-  padding: 5px 12px;
-  border-radius: 999px;
   width: fit-content;
 }
 
 .proj-title {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 700;
-  font-size: 19px;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-size: 20px;
   margin-top: 12px;
 }
 
@@ -543,11 +584,11 @@ h1.title .out {
 }
 
 .capstone-box {
-  border: 1px solid var(--faint);
+  border: 1px solid var(--ink);
   border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, var(--accent-soft), var(--paper2) 60%);
-  box-shadow: var(--shadow-md);
-  padding: 48px 40px;
+  background: var(--paper2);
+  box-shadow: none;
+  padding: 52px 40px;
   text-align: center;
   position: relative;
 }
@@ -556,17 +597,18 @@ h1.title .out {
   font-family: var(--font-mono), monospace;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.5px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--accent);
 }
 
 .capstone-title {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 700;
-  font-size: clamp(24px, 3.6vw, 38px);
-  margin: 12px 0;
-  letter-spacing: -0.5px;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-style: italic;
+  font-size: clamp(26px, 3.8vw, 40px);
+  margin: 14px 0;
+  letter-spacing: -0.3px;
 }
 
 .capstone-desc {
@@ -582,23 +624,23 @@ footer {
   border-top: 1px solid var(--faint);
   padding: 28px 32px;
   text-align: center;
-  font-family: var(--font-body), sans-serif;
-  font-size: 13px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
   font-weight: 500;
+  letter-spacing: 0.3px;
   color: var(--mid);
 }
 
-/* --- Landing page (public, pre-auth — the one place in the app that earns
-   real motion-graphics treatment: a marketing surface, not a dense tracker).
-   Everything here still runs on the same design tokens (--accent, --paper,
-   radius/shadow scale) so it reads as the same product, just louder. --- */
+/* --- Landing page (public, pre-auth). Same design tokens as the rest of
+   the app, no separate "marketing" color language — just more room to
+   breathe. --- */
 
 .landing {
   overflow-x: clip;
 }
 
-/* Soft blurred color fields drifting behind the hero — the "motion graphics"
-   background layer. Pure CSS + Motion, no image assets. */
+/* Soft blurred color fields drifting behind the hero — kept, toned down
+   to sit quietly behind serif type instead of behind a bold sans one. */
 .landing-blobs {
   position: absolute;
   inset: 0;
@@ -610,8 +652,8 @@ footer {
 .landing-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(70px);
-  opacity: 0.5;
+  filter: blur(90px);
+  opacity: 0.35;
 }
 
 .landing-blob.b1 {
@@ -628,7 +670,7 @@ footer {
   top: 60px;
   right: -140px;
   background: var(--gday-l2);
-  opacity: 0.35;
+  opacity: 0.25;
 }
 
 .landing-blob.b3 {
@@ -637,7 +679,7 @@ footer {
   bottom: -140px;
   left: 30%;
   background: var(--accent-soft);
-  opacity: 0.4;
+  opacity: 0.3;
 }
 
 .landing .hero {
@@ -656,7 +698,7 @@ footer {
 }
 
 .landing-cta {
-  margin-top: 32px;
+  margin-top: 34px;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -670,21 +712,20 @@ footer {
 }
 
 .landing-chips {
-  margin-top: 36px;
+  margin-top: 38px;
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 18px;
 }
 
 .landing-chip {
   font-family: var(--font-mono), monospace;
   font-size: 12px;
   font-weight: 600;
+  letter-spacing: 0.3px;
   color: var(--mid);
-  background: var(--paper2);
-  border: 1px solid var(--faint);
-  padding: 6px 12px;
-  border-radius: 999px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--faint);
 }
 
 /* Stat counters */
@@ -693,10 +734,11 @@ footer {
   z-index: 1;
   max-width: 1600px;
   margin: 0 auto;
-  padding: 40px 32px 80px;
+  padding: 44px 32px 80px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--faint);
 }
 
 @media (max-width: 720px) {
@@ -706,25 +748,30 @@ footer {
 }
 
 .landing-stat {
-  padding: 26px 22px;
-  background: var(--paper2);
-  border: 1px solid var(--faint);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  padding: 28px 22px;
+  border-right: 1px solid var(--faint);
   text-align: center;
 }
 
+.landing-stat:last-child {
+  border-right: none;
+}
+
 .landing-stat .num {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 800;
-  font-size: 40px;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-size: 42px;
   color: var(--accent);
   letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
 }
 
 .landing-stat .lbl {
-  margin-top: 6px;
-  font-size: 13px;
+  margin-top: 8px;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
   font-weight: 500;
   color: var(--mid);
 }
@@ -743,7 +790,7 @@ footer {
   left: 43px;
   top: 8px;
   bottom: 8px;
-  width: 2px;
+  width: 1px;
   background: var(--faint);
 }
 
@@ -751,7 +798,7 @@ footer {
   position: absolute;
   left: 43px;
   top: 8px;
-  width: 2px;
+  width: 1px;
   height: 100%;
   background: var(--accent);
   transform-origin: top;
@@ -771,9 +818,9 @@ footer {
   width: 32px;
   height: 32px;
   margin-left: 28px;
-  border-radius: 999px;
-  background: var(--paper2);
-  border: 2px solid var(--accent);
+  border-radius: 50%;
+  background: var(--paper);
+  border: 1.5px solid var(--accent);
   color: var(--accent);
   font-family: var(--font-mono), monospace;
   font-size: 11px;
@@ -788,13 +835,13 @@ footer {
   background: var(--paper2);
   border: 1px solid var(--faint);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
 }
 
 .journey-card .jtitle {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 700;
-  font-size: 17px;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-size: 18px;
 }
 
 .journey-card .jdesc {
@@ -825,7 +872,9 @@ footer {
   padding: 0 32px 90px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: 1px;
+  background: var(--faint);
+  border: 1px solid var(--faint);
 }
 
 @media (max-width: 900px) {
@@ -835,29 +884,22 @@ footer {
 }
 
 .pillar-card {
-  padding: 26px 24px;
+  padding: 28px 24px;
   background: var(--paper2);
-  border: 1px solid var(--faint);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
 }
 
 .pillar-num {
   font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--accent);
-  background: var(--accent-soft);
-  display: inline-block;
-  padding: 3px 9px;
-  border-radius: 999px;
 }
 
 .pillar-title {
-  margin-top: 14px;
-  font-family: var(--font-display), sans-serif;
-  font-weight: 700;
-  font-size: 18px;
+  margin-top: 16px;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-size: 19px;
 }
 
 .pillar-desc {
@@ -878,48 +920,49 @@ footer {
   position: relative;
   overflow: hidden;
   border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, var(--accent), var(--gday-l3));
-  box-shadow: var(--shadow-lg);
-  padding: 64px 40px;
+  background: var(--ink);
+  box-shadow: none;
+  padding: 68px 40px;
   text-align: center;
 }
 
 .landing-final-box h2 {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 800;
-  font-size: clamp(26px, 4vw, 40px);
-  color: var(--accent-ink);
-  letter-spacing: -0.5px;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-style: italic;
+  font-size: clamp(28px, 4vw, 42px);
+  color: var(--paper);
+  letter-spacing: -0.3px;
 }
 
 .landing-final-box p {
-  margin: 12px auto 0;
+  margin: 14px auto 0;
   max-width: 520px;
-  color: var(--accent-ink);
-  opacity: 0.9;
+  color: var(--paper);
+  opacity: 0.7;
   font-size: 15px;
 }
 
 .landing-final-box .landing-cta {
   justify-content: center;
-  margin-top: 28px;
+  margin-top: 30px;
 }
 
 .landing-final-box .btn-primary.landing-btn {
-  background: var(--paper2);
-  color: var(--ink);
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 
 .landing-final-box .back-btn {
   background: transparent;
-  border-color: rgba(255, 255, 255, 0.4);
-  color: var(--accent-ink);
+  border-color: rgba(245, 241, 230, 0.3);
+  color: var(--paper);
 }
 
 .landing-final-box .back-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: var(--accent-ink);
-  color: var(--accent-ink);
+  background: rgba(245, 241, 230, 0.1);
+  border-color: var(--paper);
+  color: var(--paper);
 }
 
 /* --- Topic detail + LeetCode bank --- */
@@ -932,8 +975,7 @@ footer {
   animation: rise 0.5s cubic-bezier(.16, 1, .3, 1) forwards;
 }
 
-/* Sidebar + main content split — uses the width that used to sit empty
-   beside a single centered column, without widening the page further. */
+/* Sidebar + main content split. */
 .detail-layout {
   display: grid;
   grid-template-columns: 220px 1fr;
@@ -1019,19 +1061,18 @@ footer {
   border-radius: var(--radius-sm);
   padding: 8px 14px;
   cursor: pointer;
-  background: var(--paper2);
+  background: transparent;
   color: var(--ink);
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 
 .back-btn:hover {
   background: var(--accent-soft);
   color: var(--accent);
   border-color: var(--accent);
-  transform: translateY(-1px);
 }
 
 .page-topbar {
@@ -1050,19 +1091,18 @@ footer {
 .detail-num {
   font-family: var(--font-mono), monospace;
   color: var(--accent);
-  background: var(--accent-soft);
   display: inline-block;
-  padding: 3px 9px;
-  border-radius: 999px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 .detail-title {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 700;
-  font-size: clamp(28px, 4.6vw, 48px);
-  letter-spacing: -1px;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-style: italic;
+  font-size: clamp(30px, 4.6vw, 50px);
+  letter-spacing: -0.5px;
   margin-top: 12px;
 }
 
@@ -1070,7 +1110,7 @@ footer {
   color: var(--mid);
   font-weight: 400;
   font-size: 16px;
-  margin-top: 10px;
+  margin-top: 12px;
   max-width: 640px;
 }
 
@@ -1082,7 +1122,7 @@ footer {
 }
 
 .detail-progress .bar-bg {
-  height: 8px;
+  height: 6px;
   flex: 1;
 }
 
@@ -1097,9 +1137,9 @@ footer {
   margin-bottom: 18px;
 }
 
-/* Phase 2+ topic pages: concept checklist (primary) on the left, existing
-   practice questions (reference) on the right. Collapses to one column,
-   checklist first, on narrow screens. */
+/* Concept checklist (primary) on the left, practice questions (reference)
+   on the right. Collapses to one column, checklist first, on narrow
+   screens. */
 .checklist-columns {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1125,9 +1165,9 @@ footer {
 }
 
 .sub-title {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 700;
-  font-size: 17px;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-size: 18px;
 }
 
 .sub-count {
@@ -1143,15 +1183,15 @@ footer {
 }
 
 /* "What to learn" primer — sits above the question rows in each subtopic,
-   so a subtopic teaches before it tests. Bordered block, mono eyebrow label,
-   plain bullet list — no new colors, stays inside the ledger system. */
+   so a subtopic teaches before it tests. */
 .concept-block {
-  border: 1px solid var(--faint);
-  border-radius: var(--radius-md);
-  background: var(--paper2);
-  box-shadow: var(--shadow-sm);
-  padding: 18px 20px;
-  margin-bottom: 12px;
+  border: none;
+  border-left: 3px solid var(--faint);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 4px 0 4px 18px;
+  margin-bottom: 20px;
 }
 
 .concept-eyebrow {
@@ -1161,10 +1201,7 @@ footer {
   text-transform: uppercase;
   letter-spacing: 1.5px;
   color: var(--accent);
-  background: var(--accent-soft);
   display: inline-block;
-  padding: 3px 9px;
-  border-radius: 999px;
   margin-bottom: 12px;
 }
 
@@ -1172,13 +1209,13 @@ footer {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .concept-list li {
-  font-size: 13.5px;
-  line-height: 1.55;
-  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 400;
   padding-left: 16px;
   position: relative;
 }
@@ -1205,23 +1242,22 @@ footer {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 13px 16px;
-  border: 1px solid var(--faint);
-  border-radius: var(--radius-sm);
-  margin-bottom: 8px;
-  background: var(--paper2);
+  padding: 13px 14px;
+  border: none;
+  border-bottom: 1px solid var(--faint);
+  border-radius: 0;
+  margin-bottom: 0;
+  background: transparent;
   cursor: pointer;
-  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  transition: background 0.15s;
 }
 
 .q-row:hover {
-  border-color: var(--accent);
-  box-shadow: var(--shadow-sm);
+  background: var(--accent-soft);
 }
 
 .q-row.done {
-  background: var(--accent-soft);
-  border-color: var(--accent-soft);
+  background: transparent;
 }
 
 .q-row.done .q-text,
@@ -1235,15 +1271,15 @@ footer {
 }
 
 .q-check {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border: 1.5px solid var(--faint);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 900;
   transition: background 0.2s, border-color 0.2s;
 }
@@ -1256,7 +1292,7 @@ footer {
 
 .q-text {
   flex: 1;
-  font-weight: 600;
+  font-weight: 500;
   font-size: 13.5px;
 }
 
@@ -1273,7 +1309,7 @@ footer {
 /* Algorithm List page: a muted description line under the algorithm name,
    and a small "Learn" link in place of the platform tag. */
 .algo-desc {
-  font-weight: 500;
+  font-weight: 400;
   font-size: 12px;
   color: var(--mid);
   margin-top: 4px;
@@ -1314,8 +1350,8 @@ footer {
   font-weight: 600;
   letter-spacing: 1px;
   text-transform: uppercase;
-  padding: 4px 9px;
-  border-radius: 999px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--faint);
   color: var(--mid);
   flex-shrink: 0;
@@ -1325,7 +1361,7 @@ footer {
 
 .q-row.done .diff {
   border-color: transparent;
-  background: var(--paper2);
+  background: transparent;
   color: var(--mid);
 }
 
@@ -1338,14 +1374,16 @@ footer {
 }
 
 .q-row.done .diff.H {
-  background: var(--paper2);
+  background: transparent;
   color: var(--ink);
+  border: 1px solid var(--ink);
 }
 
 .mini-proj {
   margin-top: 18px;
-  border: 1px dashed var(--accent);
-  border-radius: var(--radius-md);
+  border: none;
+  border-left: 3px solid var(--accent);
+  border-radius: 0;
   background: var(--accent-soft);
   padding: 20px 22px;
   display: flex;
@@ -1359,17 +1397,15 @@ footer {
   font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  background: var(--accent);
-  color: var(--accent-ink);
-  padding: 6px 10px;
-  border-radius: 999px;
+  color: var(--accent);
+  padding: 4px 0;
   flex-shrink: 0;
 }
 
 .mini-proj-title {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 700;
-  font-size: 15px;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-size: 16px;
 }
 
 .mini-proj-desc {
@@ -1389,10 +1425,10 @@ footer {
 
 /* Group header on the LeetCode bank page. */
 .bank-group-title {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: -0.3px;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-size: 19px;
+  letter-spacing: -0.2px;
 }
 
 /* --- Auth pages (login / signup) --- */
@@ -1411,7 +1447,7 @@ footer {
   border: 1px solid var(--faint);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  padding: 40px 36px;
+  padding: 44px 38px;
   opacity: 0;
   transform: translateY(16px);
   animation: rise 0.6s cubic-bezier(.16, 1, .3, 1) forwards;
@@ -1425,9 +1461,11 @@ footer {
 }
 
 .auth-brand .mark {
-  font-family: var(--font-display), sans-serif;
-  font-size: 20px;
-  letter-spacing: -0.5px;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-style: italic;
+  font-size: 21px;
+  letter-spacing: -0.3px;
 }
 
 .auth-brand .sub {
@@ -1439,18 +1477,19 @@ footer {
 }
 
 .auth-title {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 700;
-  font-size: 28px;
-  letter-spacing: -0.5px;
-  margin: 24px 0 6px;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-style: italic;
+  font-size: 29px;
+  letter-spacing: -0.3px;
+  margin: 26px 0 6px;
 }
 
 .auth-lead {
   font-size: 14px;
   color: var(--mid);
   font-weight: 500;
-  margin-bottom: 26px;
+  margin-bottom: 28px;
 }
 
 .field {
@@ -1471,7 +1510,7 @@ footer {
   width: 100%;
   border: 1px solid var(--faint);
   border-radius: var(--radius-sm);
-  background: var(--paper2);
+  background: var(--paper);
   color: var(--ink);
   font-family: var(--font-body), sans-serif;
   font-size: 15px;
@@ -1491,7 +1530,7 @@ footer {
 
 .btn-primary {
   width: 100%;
-  border: none;
+  border: 1px solid var(--accent);
   border-radius: var(--radius-sm);
   background: var(--accent);
   color: var(--accent-ink);
@@ -1502,12 +1541,12 @@ footer {
   padding: 14px;
   cursor: pointer;
   margin-top: 6px;
-  transition: opacity 0.2s, transform 0.15s;
+  transition: background 0.2s, color 0.2s;
 }
 
 .btn-primary:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
+  background: transparent;
+  color: var(--accent);
 }
 
 .btn-primary:disabled {
@@ -1560,9 +1599,8 @@ footer {
   color: var(--accent);
 }
 
-/* Mobile: the topbar's inline nav row (4 links + solved badge + theme
-   toggle + logout) doesn't fit at phone widths — collapse it behind a
-   hamburger button that opens a stacked dropdown panel instead. */
+/* Mobile: collapse the inline nav row behind a hamburger button that
+   opens a stacked dropdown panel instead. */
 @media (max-width: 640px) {
   .topbar {
     padding: 12px 16px;
@@ -1605,7 +1643,8 @@ footer {
   .section-label,
   .phase,
   .capstone,
-  .detail {
+  .detail,
+  .ledger {
     padding-left: 18px;
     padding-right: 18px;
   }
@@ -1622,7 +1661,9 @@ footer {
 .career-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  gap: 1px;
+  background: var(--faint);
+  border: 1px solid var(--faint);
   max-width: 900px;
   margin: 0 auto;
 }
@@ -1634,30 +1675,31 @@ footer {
 }
 
 .career-card {
-  border: 1px solid var(--faint);
-  border-radius: var(--radius-lg);
+  border: none;
+  border-radius: 0;
   background: var(--paper2);
-  padding: 32px 28px;
-  box-shadow: var(--shadow-sm);
+  padding: 34px 28px;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: background 0.2s ease;
 }
 
 .career-card:hover {
-  box-shadow: var(--shadow-lg);
-  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .career-card-label {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 700;
-  font-size: 22px;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-style: italic;
+  font-size: 24px;
 }
 
 .career-card-tagline {
-  font-size: 13px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
   color: var(--accent);
   font-weight: 600;
 }
@@ -1671,16 +1713,19 @@ footer {
 
 .career-card .btn-primary {
   align-self: flex-start;
+  width: auto;
+  padding: 10px 20px;
   margin-top: 6px;
 }
 
 /* --- Prerequisite banner (topic page) --- */
 .prereq-banner {
-  border: 1px solid var(--faint);
-  background: var(--accent-soft);
-  border-radius: var(--radius-md);
-  padding: 16px 18px;
-  margin: 20px 0;
+  border: none;
+  border-left: 3px solid var(--faint);
+  background: transparent;
+  border-radius: 0;
+  padding: 4px 0 4px 18px;
+  margin: 24px 0;
 }
 
 .prereq-banner-label {
@@ -1689,7 +1734,7 @@ footer {
   font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--mid);
 }
 
 .prereq-banner-sub {
@@ -1725,6 +1770,7 @@ footer {
 }
 
 .prereq-status {
+  font-family: var(--font-mono), monospace;
   font-size: 11px;
   color: var(--mid);
 }
@@ -1735,17 +1781,19 @@ footer {
 }
 
 .quiz-question {
-  border: 1px solid var(--faint);
-  border-radius: var(--radius-md);
-  background: var(--paper2);
-  padding: 16px 18px;
-  margin-bottom: 12px;
+  border: none;
+  border-top: 1px solid var(--faint);
+  border-radius: 0;
+  background: transparent;
+  padding: 20px 0;
+  margin-bottom: 0;
 }
 
 .quiz-q-text {
-  font-weight: 600;
-  font-size: 14px;
-  margin-bottom: 12px;
+  font-family: var(--font-display), serif;
+  font-weight: 500;
+  font-size: 16px;
+  margin-bottom: 14px;
 }
 
 .quiz-options {
@@ -1761,7 +1809,7 @@ footer {
   padding: 10px 14px;
   border: 1px solid var(--faint);
   border-radius: var(--radius-sm);
-  background: var(--paper);
+  background: var(--paper2);
   color: var(--ink);
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease;
@@ -1782,8 +1830,8 @@ footer {
 }
 
 .quiz-option.incorrect {
-  border-color: #d64545;
-  background: rgba(214, 69, 69, 0.08);
+  border-color: #a3402f;
+  background: rgba(163, 64, 47, 0.08);
 }
 
 .quiz-explanation {
@@ -1799,27 +1847,27 @@ footer {
 .milestone-track {
   display: flex;
   flex-direction: column;
-  gap: 8px;
   margin-bottom: 32px;
+  border-top: 1px solid var(--faint);
 }
 
 .milestone-row {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 12px 16px;
-  border: 1px solid var(--faint);
-  border-radius: var(--radius-sm);
-  background: var(--paper2);
+  padding: 12px 4px;
+  border: none;
+  border-bottom: 1px solid var(--faint);
+  border-radius: 0;
+  background: transparent;
 }
 
 .milestone-row.current {
-  border-color: var(--accent);
-  box-shadow: var(--shadow-sm);
+  background: var(--accent-soft);
 }
 
 .milestone-row.upcoming {
-  opacity: 0.55;
+  opacity: 0.5;
 }
 
 .milestone-num {
@@ -1862,29 +1910,29 @@ footer {
 .readiness-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 
 .readiness-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
-  border: 1px solid var(--faint);
-  border-radius: var(--radius-sm);
-  background: var(--paper2);
+  padding: 13px 4px;
+  border: none;
+  border-bottom: 1px solid var(--faint);
+  border-radius: 0;
+  background: transparent;
   font-weight: 600;
   font-size: 14px;
 }
 
 .readiness-item.done {
-  border-color: var(--accent);
+  color: var(--mid);
 }
 
 .readiness-check {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
   border: 1.5px solid var(--faint);
   display: flex;
   align-items: center;
@@ -1901,25 +1949,26 @@ footer {
 
 /* --- Recommended-next card (dashboard) --- */
 .recommend-card {
-  border: 1px solid var(--accent);
+  border: none;
+  border-left: 3px solid var(--accent);
   background: var(--accent-soft);
-  border-radius: var(--radius-md);
-  padding: 20px 22px;
+  border-radius: 0;
+  padding: 22px 24px;
 }
 
 .recommend-eyebrow {
   font-family: var(--font-mono), monospace;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--accent);
 }
 
 .recommend-title {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 700;
-  font-size: 20px;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-size: 21px;
   margin-top: 8px;
 }
 
@@ -1934,10 +1983,11 @@ footer {
   width: 100%;
   font-family: var(--font-body), sans-serif;
   font-size: 15px;
-  padding: 14px 16px;
-  border: 1px solid var(--faint);
-  border-radius: var(--radius-md);
-  background: var(--paper2);
+  padding: 14px 4px;
+  border: none;
+  border-bottom: 1px solid var(--ink);
+  border-radius: 0;
+  background: transparent;
   color: var(--ink);
 }
 
@@ -1950,7 +2000,7 @@ footer {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 12px 4px;
   border-bottom: 1px solid var(--faint);
   text-decoration: none;
   color: var(--ink);
@@ -1967,9 +2017,6 @@ footer {
   letter-spacing: 0.4px;
   text-transform: uppercase;
   color: var(--mid);
-  background: var(--faint);
-  padding: 3px 8px;
-  border-radius: 999px;
   flex-shrink: 0;
 }
 
@@ -1990,10 +2037,11 @@ footer {
 }
 
 .empty-state-title {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 700;
-  font-size: 22px;
-  margin-bottom: 24px;
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-style: italic;
+  font-size: 24px;
+  margin-bottom: 26px;
 }
 
 @media (prefers-reduced-motion: reduce) {

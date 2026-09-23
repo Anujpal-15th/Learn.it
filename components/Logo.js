@@ -11,7 +11,7 @@ export default function Logo({ size = 28 }) {
       aria-hidden="true"
       style={{ flexShrink: 0 }}
     >
-      <rect x="4" y="4" width="56" height="56" rx="16" fill="var(--accent)" />
+      <rect x="4" y="4" width="56" height="56" rx="4" fill="var(--accent)" />
       <path
         d="M22,18 L22,44 L30,44 L38,50 L48,26"
         fill="none"
