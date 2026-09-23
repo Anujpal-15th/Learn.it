@@ -1,31 +1,42 @@
 'use client';
 
-// Topic detail (Phase 4). Shows every subtopic, its checkable question rows,
-// and the checkpoint project. Toggling is optimistic and persisted via the
-// shared useProgress hook.
+// Topic detail — the Learn -> Practice -> Quiz -> Project step of the
+// guided flow. Works for a topic from either roadmap (looked up via
+// findTopicRoadmap, not a hardcoded TOPICS import), and adds the
+// guided-learning layer on top of the original subtopic/practice/checkpoint
+// content: a soft prerequisites banner, a quiz block, and mark-complete /
+// next-topic navigation driven by the recommendation engine.
 
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
-import { TOPICS, qid, topicSolved, checklistKey, checklistProgress } from '@/lib/topics';
+import {
+  qid,
+  topicSolved,
+  checklistKey,
+  checklistProgress,
+  projectKey,
+  projectDone,
+} from '@/lib/topics';
+import { findTopicRoadmap } from '@/lib/roadmaps';
+import { prerequisiteGaps, recommendNextTopic } from '@/lib/roadmap-engine';
+import { getTopicMeta } from '@/lib/roadmap-meta';
 import { useProgress } from '@/components/useProgress';
 import QuestionRow from '@/components/QuestionRow';
 import ThemeToggle from '@/components/ThemeToggle';
+import PrereqBanner from '@/components/PrereqBanner';
+import QuizBlock from '@/components/QuizBlock';
 
-const TOTAL_TOPICS = TOPICS.length;
-
-// Phase 1 (DSA) is genuine solve-this-problem practice — a single column of
-// checkable questions, since its subtopics are already named patterns.
-// Everything else (Phase 0 language foundations, Phase 2 onward) shows a
-// checklist of concept names as the primary content, with the existing
-// practice questions alongside as secondary/reference material.
-function isChecklistPhase(phase) {
-  return phase !== 1;
+// A topic uses the checklist layout (concept checklist + practice side by
+// side) whenever its subtopics carry a checklist — true for every topic
+// except the DSA phase's pattern-based topics, which are pure practice.
+function isChecklistTopic(top) {
+  return !!(top.subtopics[0] && top.subtopics[0].checklist);
 }
 
 export default function TopicPage() {
   const params = useParams();
   const router = useRouter();
-  const top = TOPICS.find((t) => t.id === params.id);
+  const { roadmap, topic: top } = findTopicRoadmap(params.id);
   const { progress, loading, error, isDone, toggle } = useProgress();
 
   if (loading) {
@@ -45,20 +56,28 @@ export default function TopicPage() {
         </button>
         <div className="detail-head">
           <div className="detail-title">Topic not found</div>
-          <div className="detail-sub">That topic id doesn’t exist in the roadmap.</div>
+          <div className="detail-sub">That topic id doesn’t exist in either roadmap.</div>
         </div>
       </div>
     );
   }
 
+  const TOTAL_TOPICS = roadmap.topics.length;
   const { c, t } = topicSolved(top, progress);
   const pct = t ? Math.round((c / t) * 100) : 0;
   const numStr = String(top.num).padStart(2, '0');
+  const meta = getTopicMeta(top.id);
+  const gaps = prerequisiteGaps(top.id, progress);
+  const projDone = projectDone(top.id, progress);
+
+  const recommendation = recommendNextTopic(roadmap, progress);
+  const nextTopic =
+    recommendation && recommendation.topic.id !== top.id ? recommendation.topic : null;
 
   return (
     <div className="detail">
       <div className="page-topbar">
-        <button className="back-btn" onClick={() => router.push('/dashboard')}>
+        <button className="back-btn" onClick={() => router.push('/roadmap/' + roadmap.id)}>
           ← Back to roadmap
         </button>
         <ThemeToggle />
@@ -68,7 +87,7 @@ export default function TopicPage() {
         <aside className="detail-sidebar">
           <div className="sidebar-label">On this page</div>
           {top.subtopics.map((s, si) => {
-            const checklist = isChecklistPhase(top.phase);
+            const checklist = isChecklistTopic(top);
             const navCount = checklist
               ? checklistProgress(top, si, progress)
               : { c: s.q.filter((_, qi) => isDone(qid(top.id, si, qi))).length, t: s.q.length };
@@ -79,6 +98,11 @@ export default function TopicPage() {
               </a>
             );
           })}
+          {top.quiz && top.quiz.length ? (
+            <a href="#quiz" className="sidebar-link">
+              <span>Quiz</span>
+            </a>
+          ) : null}
         </aside>
 
         <div className="detail-main">
@@ -86,14 +110,14 @@ export default function TopicPage() {
             <div className="detail-num mono">TOPIC {numStr} / {TOTAL_TOPICS}</div>
             <div className="detail-title">{top.title}</div>
             <div className="detail-sub">{top.sub}</div>
+
+            <div className="detail-progress" style={{ gap: 14, flexWrap: 'wrap' }}>
+              <span className="ctag">Difficulty: {meta.difficulty}</span>
+              <span className="ctag">Estimated time: {meta.estimatedTime}</span>
+            </div>
+
             {top.learnMore ? (
-              <a
-                className="concept-more"
-                href={top.learnMore.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ marginTop: 10, display: 'inline-block' }}
-              >
+              <a className="concept-more" href={top.learnMore.url} target="_blank" rel="noopener noreferrer" style={{ marginTop: 10, display: 'inline-block' }}>
                 {top.learnMore.label} {'↗'}
               </a>
             ) : null}
@@ -104,10 +128,12 @@ export default function TopicPage() {
               <span className="mono" style={{ fontSize: 12 }}>{c}/{t} solved</span>
             </div>
             {error ? <div className="detail-error">{error}</div> : null}
+
+            <PrereqBanner gaps={gaps} />
           </div>
 
           {top.subtopics.map((s, si) => {
-            const checklist = isChecklistPhase(top.phase);
+            const checklist = isChecklistTopic(top);
             const doneC = s.q.filter((_, qi) => isDone(qid(top.id, si, qi))).length;
             const { c: clDone, t: clTotal } = checklistProgress(top, si, progress);
             const headCount = checklist ? `${clDone}/${clTotal}` : `${doneC}/${s.q.length}`;
@@ -116,17 +142,12 @@ export default function TopicPage() {
               <div className="concept-block">
                 <div className="concept-eyebrow">What to learn</div>
                 <ul className="concept-list">
-                  {s.concepts.map((c, ci) => (
-                    <li key={ci}>{c}</li>
+                  {s.concepts.map((cItem, ci) => (
+                    <li key={ci}>{cItem}</li>
                   ))}
                 </ul>
                 {s.learnMore ? (
-                  <a
-                    className="concept-more"
-                    href={s.learnMore.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                  <a className="concept-more" href={s.learnMore.url} target="_blank" rel="noopener noreferrer">
                     {s.learnMore.label} {'↗'}
                   </a>
                 ) : null}
@@ -135,9 +156,7 @@ export default function TopicPage() {
 
             const questionRows = s.q.map((q, qi) => {
               const id = qid(top.id, si, qi);
-              return (
-                <QuestionRow key={id} q={q} id={id} done={isDone(id)} onToggle={toggle} />
-              );
+              return <QuestionRow key={id} q={q} id={id} done={isDone(id)} onToggle={toggle} />;
             });
 
             return (
@@ -192,12 +211,36 @@ export default function TopicPage() {
             );
           })}
 
-          <div className="mini-proj">
-            <div className="mini-proj-flag">Checkpoint</div>
+          {top.quiz && top.quiz.length ? (
+            <div id="quiz">
+              <QuizBlock topic={top} isDone={isDone} toggle={toggle} />
+            </div>
+          ) : null}
+
+          <div
+            className="mini-proj"
+            onClick={() => toggle(projectKey(top.id))}
+            role="button"
+            tabIndex={0}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="mini-proj-flag">{projDone ? 'Completed' : 'Checkpoint'}</div>
             <div>
-              <div className="mini-proj-title">{top.mini.title}</div>
+              <div className="mini-proj-title">{top.mini.title}{projDone ? ' ✓' : ''}</div>
               <div className="mini-proj-desc">{top.mini.desc}</div>
             </div>
+          </div>
+
+          <div className="landing-cta" style={{ marginTop: 24 }}>
+            {nextTopic ? (
+              <button className="btn-primary landing-btn" onClick={() => router.push('/topic/' + nextTopic.id)}>
+                Next Topic: {nextTopic.title} →
+              </button>
+            ) : (
+              <button className="btn-primary landing-btn" onClick={() => router.push('/roadmap/' + roadmap.id)}>
+                Back to Roadmap
+              </button>
+            )}
           </div>
         </div>
       </div>

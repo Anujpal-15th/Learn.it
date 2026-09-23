@@ -1,10 +1,12 @@
 // /api/progress
-//   GET  -> current user's saved data { progress, growth }
+//   GET  -> current user's saved data { progress, growth, meta }
 //   POST -> upsert the full data object for the current user
 //
 // The user is always re-derived from the session cookie (Rules.md) — the
 // request body never carries a user id. Data is a single jsonb blob per user
-// in the shape { progress: {"<id>": true}, growth: {"YYYY-MM-DD": count} }.
+// in the shape { progress: {"<id>": true}, growth: {"YYYY-MM-DD": count},
+// meta: { selectedCareer } }. `meta` was added for the guided-roadmap career
+// picker — additive, so existing rows without it just default to {}.
 
 import { NextResponse } from 'next/server';
 import { ensureSchema, query } from '@/lib/db';
@@ -12,7 +14,7 @@ import { getUserFromRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-const EMPTY = { progress: {}, growth: {} };
+const EMPTY = { progress: {}, growth: {}, meta: {} };
 
 export async function GET(request) {
   try {
@@ -30,6 +32,7 @@ export async function GET(request) {
     return NextResponse.json({
       progress: data.progress || {},
       growth: data.growth || {},
+      meta: data.meta || {},
     });
   } catch (err) {
     return NextResponse.json(
@@ -59,6 +62,7 @@ export async function POST(request) {
         body && typeof body.progress === 'object' && body.progress ? body.progress : {},
       growth:
         body && typeof body.growth === 'object' && body.growth ? body.growth : {},
+      meta: body && typeof body.meta === 'object' && body.meta ? body.meta : {},
     };
 
     await ensureSchema();

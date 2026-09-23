@@ -1615,6 +1615,387 @@ footer {
   }
 }
 
+/* --- Guided-roadmap layer: career cards, prerequisites, quiz, milestones,
+   readiness checklist, search. Reuses existing tokens/patterns (.card,
+   .bar-fill, .proj-card, .q-row, .diff) rather than inventing a new look. --- */
+
+.career-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+@media (max-width: 720px) {
+  .career-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
+
+.career-card {
+  border: 1px solid var(--faint);
+  border-radius: var(--radius-lg);
+  background: var(--paper2);
+  padding: 32px 28px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.career-card:hover {
+  box-shadow: var(--shadow-lg);
+  border-color: var(--accent);
+}
+
+.career-card-label {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+}
+
+.career-card-tagline {
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.career-card-pitch {
+  font-size: 14px;
+  color: var(--mid);
+  line-height: 1.55;
+  flex: 1;
+}
+
+.career-card .btn-primary {
+  align-self: flex-start;
+  margin-top: 6px;
+}
+
+/* --- Prerequisite banner (topic page) --- */
+.prereq-banner {
+  border: 1px solid var(--faint);
+  background: var(--accent-soft);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  margin: 20px 0;
+}
+
+.prereq-banner-label {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.prereq-banner-sub {
+  font-size: 13px;
+  color: var(--mid);
+  margin-top: 4px;
+}
+
+.prereq-list {
+  list-style: none;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.prereq-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.prereq-list a {
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.prereq-list a:hover {
+  color: var(--accent);
+}
+
+.prereq-status {
+  font-size: 11px;
+  color: var(--mid);
+}
+
+/* --- Quiz block (topic page) --- */
+.quiz-block {
+  margin-top: 32px;
+}
+
+.quiz-question {
+  border: 1px solid var(--faint);
+  border-radius: var(--radius-md);
+  background: var(--paper2);
+  padding: 16px 18px;
+  margin-bottom: 12px;
+}
+
+.quiz-q-text {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quiz-option {
+  text-align: left;
+  font-family: var(--font-body), sans-serif;
+  font-size: 13px;
+  padding: 10px 14px;
+  border: 1px solid var(--faint);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.quiz-option:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.quiz-option:disabled {
+  cursor: default;
+}
+
+.quiz-option.correct {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 600;
+}
+
+.quiz-option.incorrect {
+  border-color: #d64545;
+  background: rgba(214, 69, 69, 0.08);
+}
+
+.quiz-explanation {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--mid);
+  line-height: 1.5;
+  border-top: 1px solid var(--faint);
+  padding-top: 12px;
+}
+
+/* --- Milestone track (roadmap page phase navigator) --- */
+.milestone-track {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 32px;
+}
+
+.milestone-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border: 1px solid var(--faint);
+  border-radius: var(--radius-sm);
+  background: var(--paper2);
+}
+
+.milestone-row.current {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.milestone-row.upcoming {
+  opacity: 0.55;
+}
+
+.milestone-num {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--mid);
+  width: 24px;
+  flex-shrink: 0;
+}
+
+.milestone-name {
+  flex: 1;
+  font-weight: 600;
+  font-size: 14px;
+  min-width: 0;
+}
+
+.milestone-bar {
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.milestone-pct {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--mid);
+  width: 42px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .milestone-bar {
+    display: none;
+  }
+}
+
+/* --- Job-readiness checklist --- */
+.readiness-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.readiness-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--faint);
+  border-radius: var(--radius-sm);
+  background: var(--paper2);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.readiness-item.done {
+  border-color: var(--accent);
+}
+
+.readiness-check {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--faint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--accent-ink);
+  flex-shrink: 0;
+}
+
+.readiness-item.done .readiness-check {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* --- Recommended-next card (dashboard) --- */
+.recommend-card {
+  border: 1px solid var(--accent);
+  background: var(--accent-soft);
+  border-radius: var(--radius-md);
+  padding: 20px 22px;
+}
+
+.recommend-eyebrow {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.recommend-title {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  margin-top: 8px;
+}
+
+.recommend-reason {
+  font-size: 13px;
+  color: var(--mid);
+  margin-top: 6px;
+}
+
+/* --- Search page --- */
+.search-input {
+  width: 100%;
+  font-family: var(--font-body), sans-serif;
+  font-size: 15px;
+  padding: 14px 16px;
+  border: 1px solid var(--faint);
+  border-radius: var(--radius-md);
+  background: var(--paper2);
+  color: var(--ink);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.search-result {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--faint);
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.search-result:hover {
+  background: var(--accent-soft);
+}
+
+.search-result-type {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--mid);
+  background: var(--faint);
+  padding: 3px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.search-result-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.search-result-subtitle {
+  font-size: 12px;
+  color: var(--mid);
+}
+
+/* --- Empty state (dashboard, no career chosen yet) --- */
+.empty-state {
+  text-align: center;
+  padding: 40px 0;
+}
+
+.empty-state-title {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  margin-bottom: 24px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation: none !important;

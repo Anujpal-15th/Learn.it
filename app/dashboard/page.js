@@ -1,41 +1,40 @@
 'use client';
 
-// Dashboard (Phase 3). Reads the real session + progress, renders the stat
-// strip, the daily activity grid, and every phase -> topic card. Read-only:
-// toggling questions happens on the topic detail page (Phase 4).
+// Dashboard — the personalized hub, not the roadmap browser (that's now
+// /roadmap/[career]). Shows a "choose your path" empty state until the
+// learner has picked a career, then Continue Learning + Your Progress +
+// Recommended Next + a milestone summary, scoped to their selected career.
 
 import { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
-import {
-  TOPICS,
-  PHASES,
-  PHASE_PROJECTS,
-  CAPSTONE,
-  totalQuestions,
-  solvedCount,
-  topicSolved,
-  topicComplete,
-} from '@/lib/topics';
+import Link from 'next/link';
+import { CAREERS, getRoadmap, getCareer } from '@/lib/roadmaps';
+import { roadmapStats, milestoneStats, recommendNextTopic } from '@/lib/roadmap-engine';
 import { useProgress } from '@/components/useProgress';
 import ThemeToggle from '@/components/ThemeToggle';
 import Logo from '@/components/Logo';
+import CareerCard from '@/components/CareerCard';
 
-const TOTAL_TOPICS = TOPICS.length;
-
-const gridVariants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.05 } },
-};
-const cardVariants = {
-  hidden: { opacity: 0, y: 14 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] } },
-};
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 18) return 'Good afternoon';
+  return 'Good evening';
+}
 
 export default function Dashboard() {
   const router = useRouter();
-  const { user, progress, growth, loading } = useProgress();
+  const { user, progress, meta, loading, setSelectedCareer } = useProgress();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const careerId = meta.selectedCareer;
+  const roadmap = careerId ? getRoadmap(careerId) : null;
+  const career = careerId ? getCareer(careerId) : null;
+
+  const stats = useMemo(() => (roadmap ? roadmapStats(roadmap, progress) : null), [roadmap, progress]);
+  const milestones = useMemo(() => (roadmap ? milestoneStats(roadmap, progress) : []), [roadmap, progress]);
+  const recommendation = useMemo(() => (roadmap ? recommendNextTopic(roadmap, progress) : null), [roadmap, progress]);
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -43,25 +42,10 @@ export default function Dashboard() {
     router.refresh();
   }
 
-  const stats = useMemo(() => {
-    const total = totalQuestions();
-    const solved = solvedCount(progress);
-    const cleared = TOPICS.filter((t) => topicComplete(t, progress)).length;
-    return {
-      total,
-      solved,
-      cleared,
-      pct: total ? Math.round((solved / total) * 100) : 0,
-    };
-  }, [progress]);
-
-  const byPhase = useMemo(() => {
-    const map = {};
-    TOPICS.forEach((t) => {
-      (map[t.phase] = map[t.phase] || []).push(t);
-    });
-    return map;
-  }, []);
+  async function handlePickCareer(id) {
+    await setSelectedCareer(id);
+    router.push('/roadmap/' + id);
+  }
 
   if (loading) {
     return (
@@ -80,231 +64,140 @@ export default function Dashboard() {
           <span className="mark">Learn.it</span>
           <span className="sub">{user.name || user.email}</span>
         </div>
-        <button
-          className="menu-btn"
-          onClick={() => setMenuOpen((o) => !o)}
-          aria-label="Menu"
-          aria-expanded={menuOpen}
-        >
+        <button className="menu-btn" onClick={() => setMenuOpen((o) => !o)} aria-label="Menu" aria-expanded={menuOpen}>
           {menuOpen ? '✕' : '☰'}
         </button>
         <div className={'nav' + (menuOpen ? ' open' : '')}>
-          <a className="tab" href="/backend-topics">
-            Backend Topics
-          </a>
-          <a className="tab" href="/networking">
-            Networking
-          </a>
-          <a className="tab" href="/interview-questions">
-            Interview Q&amp;A
-          </a>
-          <a className="tab" href="/algorithms">
-            Algorithm List
-          </a>
-          <a className="tab" href="/leetcode">
-            <span className="dot" aria-hidden="true" />
-            {stats.solved} solved
-          </a>
+          {roadmap ? <Link className="tab" href={'/roadmap/' + roadmap.id}>Roadmap</Link> : null}
+          <Link className="tab" href="/search">Search</Link>
+          <Link className="tab" href="/interview-questions">Interview Q&amp;A</Link>
+          {career && career.id === 'java-developer' ? (
+            <>
+              <Link className="tab" href="/backend-topics">Backend Topics</Link>
+              <Link className="tab" href="/networking">Networking</Link>
+              <Link className="tab" href="/algorithms">Algorithm List</Link>
+              <Link className="tab" href="/leetcode">LeetCode</Link>
+            </>
+          ) : null}
           <ThemeToggle />
-          <button className="tab" onClick={handleLogout}>
-            Log out
-          </button>
+          <button className="tab" onClick={handleLogout}>Log out</button>
         </div>
       </div>
 
-      <motion.section
-        className="hero"
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <div className="eyebrow">
-          8 phases · {TOTAL_TOPICS} topics · dsa-to-deployment · full-stack java track
-        </div>
-        <h1 className="title">
-          From <span className="out">Syntax</span>
-          <br />
-          to Systems.
-        </h1>
-        <p className="hero-sub">
-          DSA and algorithms first, then the full backend stack, then the
-          frontend that ties it together — every topic broken into subtopics,
-          every subtopic backed by real practice questions across all three
-          difficulties, every phase closed out with a project. Nothing skipped.
-        </p>
-
-        <div className="ledger">
-          <div className="cell">
-            <div className="num">{stats.cleared}/{TOTAL_TOPICS}</div>
-            <div className="lbl">Topics cleared</div>
+      {!roadmap ? (
+        <div className="empty-state boot">
+          <div className="eyebrow">Learn.it</div>
+          <div className="empty-state-title">
+            {greeting()}, {user.name || 'there'}. What do you want to become?
           </div>
-          <div className="cell">
-            <div className="num">{stats.solved}/{stats.total}</div>
-            <div className="lbl">Questions solved</div>
-          </div>
-          <div className="cell">
-            <div className="num">{stats.cleared}/{TOTAL_TOPICS}</div>
-            <div className="lbl">Checkpoints hit</div>
-          </div>
-          <div className="cell">
-            <div className="num">{stats.pct}%</div>
-            <div className="lbl">Overall progress</div>
+          <div className="career-grid">
+            {CAREERS.map((c) => (
+              <CareerCard key={c.id} career={c} onStart={handlePickCareer} />
+            ))}
           </div>
         </div>
-      </motion.section>
+      ) : (
+        <>
+          <motion.section
+            className="hero"
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <div className="eyebrow">{greeting()}, {user.name || 'there'} 👋</div>
+            <h1 className="title">
+              Continue Learning
+              <br />
+              <span className="out">{career.label}</span>
+            </h1>
 
-      <div className="growth">
-        <h3>Daily growth — activity ledger</h3>
-        <GrowthGrid growth={growth} />
-      </div>
-
-      <div className="section-label">
-        <span>The Roadmap</span>
-        <div className="ln" />
-      </div>
-
-      <div>
-        {PHASES.map((ph, pi) => {
-          const phaseTopics = byPhase[pi] || [];
-          const phaseDone =
-            phaseTopics.length > 0 &&
-            phaseTopics.every((t) => topicComplete(t, progress));
-          const pp = PHASE_PROJECTS[pi];
-          return (
-            <div className="phase" key={pi}>
-              <div className="phase-head">
-                <span className="phase-num mono">
-                  {String(pi + 1).padStart(2, '0')}
-                </span>
-                <span className="phase-title">{ph.name}</span>
+            <div className="detail-progress" style={{ maxWidth: 420, marginTop: 20 }}>
+              <div className="bar-bg">
+                <div className="bar-fill" style={{ width: stats.pct + '%' }} />
               </div>
-              <div className="phase-desc">{ph.desc}</div>
-              {ph.learnMore ? (
-                <a
-                  className="concept-more"
-                  href={ph.learnMore.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ marginBottom: 18, display: 'inline-block' }}
-                >
-                  {ph.learnMore.label} {'↗'}
-                </a>
-              ) : null}
-
-              <motion.div
-                className="topic-grid"
-                variants={gridVariants}
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true, margin: '-40px' }}
-              >
-                {phaseTopics.map((top) => {
-                  const { c, t } = topicSolved(top, progress);
-                  const pct = t ? Math.round((c / t) * 100) : 0;
-                  const complete = topicComplete(top, progress);
-                  return (
-                    <motion.div
-                      className="card"
-                      key={top.id}
-                      variants={cardVariants}
-                      whileHover={{ y: -4 }}
-                      whileTap={{ scale: 0.97 }}
-                      transition={{ type: 'spring', stiffness: 350, damping: 26 }}
-                      onClick={() => router.push('/topic/' + top.id)}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          router.push('/topic/' + top.id);
-                        }
-                      }}
-                    >
-                      <div>
-                        <div className="cnum">
-                          {String(top.num).padStart(2, '0')} / {TOTAL_TOPICS}
-                          {complete ? ' · Cleared' : ''}
-                        </div>
-                        <div className="ctitle">{top.title}</div>
-                        <div className="cmeta">
-                          {top.subtopics.length} subtopics
-                        </div>
-                      </div>
-                      <div>
-                        <div className="progress-row">
-                          <div className="bar-bg">
-                            <div className="bar-fill" style={{ width: pct + '%' }} />
-                          </div>
-                          <span className="ctag">{c}/{t}</span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-
-                {pp ? (
-                  <motion.div
-                    className="proj-card"
-                    variants={cardVariants}
-                    style={{ opacity: phaseDone ? 1 : 0.6 }}
-                  >
-                    <span className="proj-eyebrow">
-                      {phaseDone ? 'Unlocked' : 'Unlocks when phase topics are cleared'}
-                    </span>
-                    <div className="proj-title">{pp.title}</div>
-                    <div className="proj-desc">{pp.desc}</div>
-                  </motion.div>
-                ) : null}
-              </motion.div>
+              <span className="mono" style={{ fontSize: 12 }}>{stats.pct}% complete</span>
             </div>
-          );
-        })}
-      </div>
 
-      <div className="capstone">
-        <div className="capstone-box">
-          <div className="capstone-eyebrow">
-            When all {TOTAL_TOPICS} topics are cleared
+            {recommendation ? (
+              <p className="hero-sub" style={{ marginTop: 16 }}>
+                Current topic: <strong>{recommendation.topic.title}</strong>
+              </p>
+            ) : (
+              <p className="hero-sub" style={{ marginTop: 16 }}>
+                Every topic in this roadmap is cleared.
+              </p>
+            )}
+
+            <div className="landing-cta" style={{ marginTop: 20 }}>
+              {recommendation ? (
+                <button className="btn-primary landing-btn" onClick={() => router.push('/topic/' + recommendation.topic.id)}>
+                  Continue Learning
+                </button>
+              ) : (
+                <Link className="btn-primary landing-btn" href={'/checklist/' + roadmap.id}>
+                  View readiness checklist
+                </Link>
+              )}
+              <Link className="back-btn" href={'/roadmap/' + roadmap.id}>
+                View full roadmap
+              </Link>
+            </div>
+          </motion.section>
+
+          <div className="ledger" style={{ marginTop: -20, marginBottom: 40 }}>
+            <div className="cell">
+              <div className="num">{stats.topicsCompleted}</div>
+              <div className="lbl">Topics completed</div>
+            </div>
+            <div className="cell">
+              <div className="num">{stats.questionsSolved}</div>
+              <div className="lbl">Questions solved</div>
+            </div>
+            <div className="cell">
+              <div className="num">{stats.projectsCompleted}</div>
+              <div className="lbl">Projects completed</div>
+            </div>
+            <div className="cell">
+              <div className="num">{stats.pct}%</div>
+              <div className="lbl">Roadmap progress</div>
+            </div>
           </div>
-          <div className="capstone-title">{CAPSTONE.title}</div>
-          <div className="capstone-desc">{CAPSTONE.desc}</div>
-        </div>
-      </div>
+
+          {recommendation ? (
+            <>
+              <div className="section-label"><span>Recommended Next</span><div className="ln" /></div>
+              <div className="recommend-card" style={{ marginBottom: 40 }}>
+                <div className="recommend-eyebrow">Because of your progress so far</div>
+                <div className="recommend-title">{recommendation.topic.title}</div>
+                <div className="recommend-reason">{recommendation.reason}</div>
+                <button className="btn-primary" style={{ marginTop: 14 }} onClick={() => router.push('/topic/' + recommendation.topic.id)}>
+                  Start
+                </button>
+              </div>
+            </>
+          ) : null}
+
+          <div className="section-label"><span>Milestones</span><div className="ln" /></div>
+          <div className="milestone-track" style={{ marginBottom: 40 }}>
+            {milestones.map((m) => (
+              <div className={'milestone-row ' + m.state} key={m.index}>
+                <span className="milestone-num mono">{String(m.index + 1).padStart(2, '0')}</span>
+                <span className="milestone-name">{m.name} {m.done ? '✓' : m.state === 'upcoming' ? '🔒' : ''}</span>
+                <div className="milestone-bar bar-bg">
+                  <div className="bar-fill" style={{ width: m.pct + '%' }} />
+                </div>
+                <span className="milestone-pct mono">{m.topicsCompleted}/{m.topicsTotal}</span>
+              </div>
+            ))}
+          </div>
+
+          <p style={{ textAlign: 'center', marginBottom: 40 }}>
+            <Link className="concept-more" href="/">Working on the other path too? Start it from the homepage →</Link>
+          </p>
+        </>
+      )}
 
       <footer>Built for one engineer&rsquo;s climb — Meerut → production</footer>
     </>
-  );
-}
-
-// GitHub-contributions-style grid: last 371 days, 4 fill levels toward --ink.
-function GrowthGrid({ growth }) {
-  const cells = useMemo(() => {
-    const out = [];
-    const today = new Date();
-    for (let i = 370; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
-      const count = growth[key] || 0;
-      let lvl = '';
-      if (count >= 1) lvl = 'l1';
-      if (count >= 3) lvl = 'l2';
-      if (count >= 6) lvl = 'l3';
-      if (count >= 10) lvl = 'l4';
-      out.push({ key, count, lvl });
-    }
-    return out;
-  }, [growth]);
-
-  return (
-    <div className="grid-days">
-      {cells.map((c) => (
-        <div
-          key={c.key}
-          className={'gday ' + c.lvl}
-          title={c.key + ': ' + c.count + ' solved'}
-        />
-      ))}
-    </div>
   );
 }

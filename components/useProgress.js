@@ -17,11 +17,12 @@ export function useProgress() {
   const [user, setUser] = useState(null);
   const [progress, setProgress] = useState({});
   const [growth, setGrowth] = useState({});
+  const [meta, setMeta] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   // Always POST the freshest data, even if two toggles land back-to-back.
-  const latest = useRef({ progress: {}, growth: {} });
+  const latest = useRef({ progress: {}, growth: {}, meta: {} });
 
   useEffect(() => {
     let active = true;
@@ -40,12 +41,13 @@ export function useProgress() {
           return;
         }
         const me = await meRes.json();
-        const data = progRes.ok ? await progRes.json() : { progress: {}, growth: {} };
+        const data = progRes.ok ? await progRes.json() : { progress: {}, growth: {}, meta: {} };
         if (!active) return;
         setUser(me.user);
         setProgress(data.progress || {});
         setGrowth(data.growth || {});
-        latest.current = { progress: data.progress || {}, growth: data.growth || {} };
+        setMeta(data.meta || {});
+        latest.current = { progress: data.progress || {}, growth: data.growth || {}, meta: data.meta || {} };
         setLoading(false);
       } catch {
         router.replace('/login');
@@ -60,43 +62,53 @@ export function useProgress() {
     return !!progress[id];
   }
 
-  // Applies nextProgress/nextGrowth optimistically, persists them, and rolls
-  // back to prevProgress/prevGrowth on failure.
-  async function commit(nextProgress, nextGrowth, prevProgress, prevGrowth) {
-    setProgress(nextProgress);
-    setGrowth(nextGrowth);
-    latest.current = { progress: nextProgress, growth: nextGrowth };
+  // Applies a next { progress, growth, meta } optimistically, persists it,
+  // and rolls back to prev on failure. Any field a caller doesn't change
+  // just passes through unchanged from latest.current.
+  async function commit(next, prev) {
+    setProgress(next.progress);
+    setGrowth(next.growth);
+    setMeta(next.meta);
+    latest.current = next;
     setError('');
 
     try {
       const res = await fetch('/api/progress', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(latest.current),
+        body: JSON.stringify(next),
       });
       if (!res.ok) throw new Error('save failed');
     } catch {
-      setProgress(prevProgress);
-      setGrowth(prevGrowth);
-      latest.current = { progress: prevProgress, growth: prevGrowth };
+      setProgress(prev.progress);
+      setGrowth(prev.growth);
+      setMeta(prev.meta);
+      latest.current = prev;
       setError('Could not save — check your connection and try again.');
     }
   }
 
   async function toggle(id) {
-    const prevProgress = latest.current.progress;
-    const prevGrowth = latest.current.growth;
-    const wasDone = !!prevProgress[id];
-    const nextProgress = { ...prevProgress, [id]: !wasDone };
+    const prev = latest.current;
+    const wasDone = !!prev.progress[id];
+    const nextProgress = { ...prev.progress, [id]: !wasDone };
     if (wasDone) delete nextProgress[id];
 
     const key = todayKey();
     const delta = wasDone ? -1 : 1;
-    const nextGrowth = { ...prevGrowth };
+    const nextGrowth = { ...prev.growth };
     nextGrowth[key] = Math.max(0, (nextGrowth[key] || 0) + delta);
 
-    await commit(nextProgress, nextGrowth, prevProgress, prevGrowth);
+    await commit({ progress: nextProgress, growth: nextGrowth, meta: prev.meta }, prev);
   }
 
-  return { user, progress, growth, loading, error, isDone, toggle };
+  // Persists which career the learner is currently on — read by /dashboard
+  // (empty state vs. personalized hub) and set from the homepage / roadmap page.
+  async function setSelectedCareer(careerId) {
+    const prev = latest.current;
+    const nextMeta = { ...prev.meta, selectedCareer: careerId };
+    await commit({ progress: prev.progress, growth: prev.growth, meta: nextMeta }, prev);
+  }
+
+  return { user, progress, growth, meta, loading, error, isDone, toggle, setSelectedCareer };
 }

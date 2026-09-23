@@ -1,12 +1,24 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
+import { getCareer } from '@/lib/roadmaps';
 
 export default function SignupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignupForm />
+    </Suspense>
+  );
+}
+
+function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const careerId = searchParams.get('career');
+  const career = careerId ? getCareer(careerId) : null;
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,8 +41,18 @@ export default function SignupPage() {
         setBusy(false);
         return;
       }
-      // Session cookie is set by the server; go to the dashboard.
-      router.push('/dashboard');
+      // If they arrived from a career card, carry that choice straight
+      // through to the roadmap instead of dropping them on an empty dashboard.
+      if (career) {
+        await fetch('/api/progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ progress: {}, growth: {}, meta: { selectedCareer: career.id } }),
+        });
+        router.push('/roadmap/' + career.id);
+      } else {
+        router.push('/dashboard');
+      }
       router.refresh();
     } catch {
       setError('Network error — please try again.');
@@ -48,8 +70,9 @@ export default function SignupPage() {
         </div>
         <h1 className="auth-title">Start the climb.</h1>
         <p className="auth-lead">
-          Create an account to track your roadmap. Your progress saves to your
-          account, not the browser — sign in anywhere.
+          {career
+            ? `Create an account to start the ${career.label} roadmap. Your progress saves to your account, not the browser.`
+            : 'Create an account to track your roadmap. Your progress saves to your account, not the browser — sign in anywhere.'}
         </p>
 
         <form onSubmit={handleSubmit} noValidate>

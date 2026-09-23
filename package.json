@@ -2,11 +2,12 @@
   "name": "the-ledger",
   "version": "1.0.0",
   "private": true,
-  "description": "The Ledger — a full-stack Java learning roadmap and daily practice tracker",
+  "description": "Learn.it — a guided learning platform for Java Developer and AI Engineer career roadmaps",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "validate": "node scripts/validate-content.mjs"
   },
   "dependencies": {
     "bcryptjs": "2.4.3",
