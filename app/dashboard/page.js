@@ -1,16 +1,18 @@
 'use client';
 
 // Home — answers exactly one question: "what should I do now?" One primary
-// action (Continue Learning), a compact progress line, and the project
-// currently in front of the learner. Deliberately not a stats dashboard —
-// the full breakdown lives on /roadmap, and the project journey on
-// /projects. Shows a "choose your path" empty state until a career is picked.
+// action (Continue learning), one progress line, and an "Up next" pair of
+// tiles (today's DSA practice, if the track has one, and the current
+// project). Deliberately not a stats dashboard — the full breakdown lives on
+// /roadmap, and the project journey on /projects. Shows a "pick your track"
+// empty state until a career is picked.
 
 import { useMemo } from 'react';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CAREERS, getRoadmap, getCareer } from '@/lib/roadmaps';
+import { CAREERS, getRoadmap } from '@/lib/roadmaps';
+import { topicSolved } from '@/lib/topics';
 import {
   roadmapStats,
   recommendNextTopic,
@@ -22,7 +24,15 @@ import { getTopicMeta } from '@/lib/roadmap-meta';
 import { useProgress } from '@/components/useProgress';
 import AppNav from '@/components/AppNav';
 import CareerCard from '@/components/CareerCard';
+import PageHeader from '@/components/PageHeader';
+import PageEnter from '@/components/motion/PageEnter';
+import Reveal from '@/components/motion/Reveal';
+import AnimatedNumber from '@/components/motion/AnimatedNumber';
+import ProgressBar from '@/components/motion/ProgressBar';
+import TrackBackground from '@/components/motion/TrackBackground';
 
+// Only ever rendered after useProgress finishes loading (always after
+// hydration), so reading the clock here can't cause a hydration mismatch.
 function greeting() {
   const h = new Date().getHours();
   if (h < 12) return 'Good morning';
@@ -30,13 +40,14 @@ function greeting() {
   return 'Good evening';
 }
 
+const stripPhase = (name) => name.replace(/^Phase \d+ — /, '');
+
 export default function Dashboard() {
   const router = useRouter();
   const { user, progress, meta, loading, setSelectedCareer } = useProgress();
 
   const careerId = meta.selectedCareer;
   const roadmap = careerId ? getRoadmap(careerId) : null;
-  const career = careerId ? getCareer(careerId) : null;
 
   const stats = useMemo(() => (roadmap ? roadmapStats(roadmap, progress) : null), [roadmap, progress]);
   const recommendation = useMemo(() => (roadmap ? recommendNextTopic(roadmap, progress) : null), [roadmap, progress]);
@@ -57,127 +68,120 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <main className="boot">
-        <div className="eyebrow">Learn.it</div>
-        <p className="sub">Loading your roadmap…</p>
-      </main>
-    );
-  }
-
-  if (!roadmap) {
-    return (
       <>
-        <AppNav user={user} active="home" />
-        <div className="empty-state boot">
-          <div className="eyebrow">Learn.it</div>
-          <div className="empty-state-title">
-            {greeting()}, {user.name || 'there'}. What do you want to become?
-          </div>
-          <div className="career-grid">
-            {CAREERS.map((c) => (
-              <CareerCard key={c.id} career={c} onStart={handlePickCareer} />
-            ))}
-          </div>
-        </div>
-        <footer>Built for one engineer&rsquo;s climb — Meerut → production</footer>
+        <AppNav loading />
+        <main className="page" aria-busy="true" />
       </>
     );
   }
 
-  const meta2 = recommendation ? getTopicMeta(recommendation.topic.id) : null;
+  const hello = `${greeting()}, ${(user && user.name) || 'there'}`;
+
+  if (!roadmap) {
+    return (
+      <>
+        <AppNav user={user} careerId={null} active="home" onCareerChange={setSelectedCareer} />
+        <PageEnter>
+          <PageHeader eyebrow={hello} title="Pick your track" sub="You can switch any time from the top bar." />
+          <Reveal className="career-grid">
+            {CAREERS.map((c) => (
+              <CareerCard key={c.id} career={c} onStart={handlePickCareer} />
+            ))}
+          </Reveal>
+        </PageEnter>
+      </>
+    );
+  }
+
+  const topicMeta = recommendation ? getTopicMeta(recommendation.topic.id) : null;
+  const dsaSolved = dsaRecommendation ? topicSolved(dsaRecommendation.topic, progress) : null;
 
   return (
     <>
-      <AppNav user={user} careerId={careerId} active="home" />
+      <AppNav user={user} careerId={careerId} active="home" onCareerChange={setSelectedCareer} />
 
-      <motion.section
-        className="hero"
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <div className="eyebrow">{greeting()}, {user.name || 'there'}</div>
+      <PageEnter>
+        <PageHeader
+          className="page-header-bg"
+          eyebrow={hello}
+          title={recommendation ? recommendation.topic.title : 'Every required topic is cleared.'}
+          sub={currentSubtopicName ? `Next up: ${currentSubtopicName}` : null}
+        >
+          <AnimatePresence initial={false}>
+            <motion.div
+              key={careerId}
+              className="track-bg-fade"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <TrackBackground track={careerId} intensity="subtle" />
+            </motion.div>
+          </AnimatePresence>
 
-        {recommendation ? (
-          <>
-            <h1 className="title">{recommendation.topic.title}</h1>
-            {currentSubtopicName ? <p className="hero-sub" style={{ marginTop: 6 }}>{currentSubtopicName}</p> : null}
+          <div className="progress-line">
+            <span><AnimatedNumber value={stats.pct} suffix="%" /></span>
+            <span className="meta-line">
+              {stats.topicsCompleted}/{stats.topicsTotal} topics
+              {topicMeta ? ` · ~${topicMeta.estimatedTime} for this topic` : ''}
+            </span>
+            <ProgressBar value={stats.pct} label="Roadmap progress" />
+          </div>
 
-            <div className="detail-progress" style={{ maxWidth: 420, marginTop: 22, gap: 14, flexWrap: 'wrap' }}>
-              <span className="ctag">{stats.pct}% of roadmap</span>
-              {meta2 ? <span className="ctag">~{meta2.estimatedTime}</span> : null}
-            </div>
-
-            <div className="landing-cta" style={{ marginTop: 22 }}>
-              <button className="btn-primary landing-btn" onClick={() => router.push('/topic/' + recommendation.topic.id)}>
-                Continue Learning
-              </button>
-              <Link className="back-btn" href={'/roadmap/' + roadmap.id}>
-                Full roadmap
+          <div className="actions">
+            {recommendation ? (
+              <Link className="btn-primary" href={'/topic/' + recommendation.topic.id}>
+                Continue learning
               </Link>
-            </div>
-          </>
-        ) : (
-          <>
-            <h1 className="title">Every required topic is cleared.</h1>
-            <div className="landing-cta" style={{ marginTop: 22 }}>
-              <Link className="btn-primary landing-btn" href={'/checklist/' + roadmap.id}>
+            ) : (
+              <Link className="btn-primary" href={'/checklist/' + roadmap.id}>
                 View readiness checklist
               </Link>
-            </div>
+            )}
+            <Link className="link-arrow" href={'/roadmap/' + roadmap.id}>
+              View roadmap <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+        </PageHeader>
+
+        {dsaRecommendation || project ? (
+          <>
+            <h2 className="section-title">Up next</h2>
+            <Reveal className="tile-grid tile-grid-2">
+              {dsaRecommendation ? (
+                <Link className="tile" href={'/topic/' + dsaRecommendation.topic.id}>
+                  <div className="tile-eyebrow">Today&rsquo;s DSA practice</div>
+                  <div className="tile-title">{dsaRecommendation.topic.title}</div>
+                  <div className="tile-desc">{dsaRecommendation.reason}</div>
+                  <div className="tile-foot">
+                    <ProgressBar
+                      size="sm"
+                      value={dsaSolved.t ? (dsaSolved.c / dsaSolved.t) * 100 : 0}
+                      label="DSA topic progress"
+                    />
+                    <span className="tile-count">{dsaSolved.c}/{dsaSolved.t}</span>
+                  </div>
+                  <span className="row-go" aria-hidden="true">›</span>
+                </Link>
+              ) : null}
+              {project ? (
+                <Link className="tile" href="/projects">
+                  <div className="tile-eyebrow">
+                    {project.done ? 'Project completed' : 'Current project'} · {stripPhase(project.phaseName)}
+                  </div>
+                  <div className="tile-title">
+                    {project.project.title.replace('Phase Project — ', '')}
+                    {project.done ? ' ✓' : ''}
+                  </div>
+                  <div className="tile-desc">{project.project.desc}</div>
+                  <span className="row-go" aria-hidden="true">›</span>
+                </Link>
+              ) : null}
+            </Reveal>
           </>
-        )}
-      </motion.section>
-
-      <div className="ledger" style={{ marginTop: -8, marginBottom: 32 }}>
-        <div className="cell">
-          <div className="num">{stats.topicsCompleted}/{stats.topicsTotal}</div>
-          <div className="lbl">Topics</div>
-        </div>
-        <div className="cell">
-          <div className="num">{stats.pct}%</div>
-          <div className="lbl">Roadmap progress</div>
-        </div>
-      </div>
-
-      {dsaRecommendation ? (
-        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '0 32px 24px' }}>
-          <div className="recommend-card" style={{ borderColor: 'var(--faint)', background: 'var(--paper2)' }}>
-            <div className="recommend-eyebrow">Today's DSA practice (parallel track)</div>
-            <div className="recommend-title">{dsaRecommendation.topic.title}</div>
-            <div className="recommend-reason">{dsaRecommendation.reason}</div>
-            <button className="back-btn" style={{ marginTop: 14 }} onClick={() => router.push('/topic/' + dsaRecommendation.topic.id)}>
-              Practice
-            </button>
-          </div>
-        </div>
-      ) : null}
-
-      {project ? (
-        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '0 32px 48px' }}>
-          <div className="section-label" style={{ padding: 0, marginBottom: 12 }}>
-            <span>Current project</span>
-            <div className="ln" />
-          </div>
-          <div
-            className="proj-card"
-            style={{ gridColumn: 'unset', cursor: 'pointer' }}
-            onClick={() => router.push('/projects')}
-            role="button"
-            tabIndex={0}
-          >
-            <span className="proj-eyebrow">{project.done ? 'Completed' : project.phaseName}</span>
-            <div className="proj-title">{project.project.title.replace('Phase Project — ', '')}{project.done ? ' ✓' : ''}</div>
-            <div className="proj-desc">{project.project.desc}</div>
-          </div>
-        </div>
-      ) : null}
-
-      <p style={{ textAlign: 'center', marginBottom: 40 }}>
-        <Link className="concept-more" href="/">Working on the other path too? Start it from the homepage →</Link>
-      </p>
-
-      <footer>Built for one engineer&rsquo;s climb — Meerut → production</footer>
+        ) : null}
+      </PageEnter>
     </>
   );
 }

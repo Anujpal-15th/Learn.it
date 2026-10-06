@@ -1,108 +1,249 @@
 'use client';
 
-// Public landing page. Rebuilt around the guided-roadmap product: the
-// headline states what Learn.it does, then exactly two career cards — no
-// stat counters, scroll-journey, or pillar cards competing for attention.
-// (The previous Java-only marketing page's phase-journey content now lives
-// on each /roadmap/[career] page, where it's actually relevant context.)
+// Public landing page (spec section 4). One track at a time, picked with the
+// top-bar switcher: hero (animated track background) -> how it works -> that
+// track's path -> one closing CTA -> footer.
 
 import { useEffect, useState } from 'react';
-import { motion } from 'motion/react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CAREERS } from '@/lib/roadmaps';
-import ThemeToggle from '@/components/ThemeToggle';
-import Logo from '@/components/Logo';
-import CareerCard from '@/components/CareerCard';
+import { AnimatePresence, motion } from 'motion/react';
+import AppNav from '@/components/AppNav';
+import TrackBackground from '@/components/motion/TrackBackground';
+import Reveal from '@/components/motion/Reveal';
+import ListItem from '@/components/motion/ListItem';
+import AnimatedNumber from '@/components/motion/AnimatedNumber';
+import { CAREERS, getCareer, getRoadmap } from '@/lib/roadmaps';
+import { numberedPhaseCount, tierSections } from '@/lib/roadmap-engine';
+import s from './Landing.module.css';
+
+const COPY = {
+  'java-developer': {
+    line1: 'Become a Java backend engineer.',
+    line2: 'One topic at a time.',
+    sub: 'A guided path from Java fundamentals through Spring Boot, databases, and system design, with DSA practice alongside.',
+  },
+  'ai-engineer': {
+    line1: 'Become an AI engineer.',
+    line2: 'Python to production agents.',
+    sub: 'A guided path from Python and math through deep learning, LLMs, RAG, and agents, with a real project at every phase.',
+  },
+};
+
+const STEPS = [
+  { n: '01', name: 'Learn', text: 'One topic at a time, broken into small steps.' },
+  { n: '02', name: 'Practice', text: 'Curated problems and a quiz for every topic.' },
+  { n: '03', name: 'Build', text: 'A project at every phase, then a capstone.' },
+];
+
+const EASE_OUT = [0.16, 1, 0.3, 1];
+const stripPhase = (name) => name.replace(/^Phase \d+ — /, '');
 
 export default function LandingPage() {
-  const router = useRouter();
-  const [authed, setAuthed] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [me, setMe] = useState(undefined); // undefined = checking, null = logged out
+  const [track, setTrack] = useState('java-developer');
+  // Until the saved track is read, AppNav gets no careerId so it can't write
+  // the Java default over the learner's saved track.
+  const [resolved, setResolved] = useState(false);
+  // The load-time swap to the saved track is instant; only a user's own
+  // switch cross-fades the hero copy.
+  const [userSwitched, setUserSwitched] = useState(false);
 
   useEffect(() => {
-    let active = true;
+    let alive = true;
     fetch('/api/auth/me')
-      .then((res) => {
-        if (active && res.ok) setAuthed(true);
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (alive) setMe(json && json.user ? json.user : null);
       })
-      .catch(() => {});
+      .catch(() => {
+        if (alive) setMe(null);
+      });
     return () => {
-      active = false;
+      alive = false;
     };
   }, []);
 
-  function handleStart(careerId) {
-    if (authed) {
-      router.push('/roadmap/' + careerId);
-    } else {
-      router.push('/signup?career=' + careerId);
+  // Saved track priority: this browser's localStorage, else (logged in) the
+  // account's saved career, else Java. `resolved` stays false until we know,
+  // so AppNav never persists a guess over the real track.
+  const [hasLocal, setHasLocal] = useState(null);
+  useEffect(() => {
+    let ok = false;
+    try {
+      const saved = localStorage.getItem('learnit-track');
+      if (getCareer(saved)) {
+        setTrack(saved);
+        ok = true;
+      }
+    } catch {}
+    setHasLocal(ok);
+  }, []);
+
+  useEffect(() => {
+    if (hasLocal === null || me === undefined) return;
+    if (hasLocal || !me) {
+      setResolved(true);
+      return;
     }
+    let alive = true;
+    fetch('/api/progress')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        const saved = data && data.meta && data.meta.selectedCareer;
+        if (alive && getCareer(saved)) setTrack(saved);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (alive) setResolved(true);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [hasLocal, me]);
+
+  function handleTrack(id) {
+    setUserSwitched(true);
+    setTrack(id);
   }
 
+  const career = getCareer(track);
+  const roadmap = getRoadmap(track);
+  const sections = tierSections(roadmap, {});
+
+  const cta = me ? (
+    <Link className="btn-primary" href={'/roadmap/' + track}>
+      Continue on {career.label} <span aria-hidden="true">→</span>
+    </Link>
+  ) : (
+    <Link className="btn-primary" href={'/signup?career=' + track}>
+      Start the {career.label} roadmap
+    </Link>
+  );
+
   return (
-    <div className="landing">
-      <div className="topbar">
-        <div className="brand">
-          <Logo size={26} />
-          <span className="mark">Learn.it</span>
-        </div>
-        <button className="menu-btn" onClick={() => setMenuOpen((o) => !o)} aria-label="Menu" aria-expanded={menuOpen}>
-          {menuOpen ? '✕' : '☰'}
-        </button>
-        <div className={'nav' + (menuOpen ? ' open' : '')}>
-          <ThemeToggle />
-          {authed ? (
-            <Link className="tab" href="/dashboard">
-              Go to dashboard
-            </Link>
-          ) : (
-            <>
-              <Link className="tab" href="/login">
-                Log in
-              </Link>
-              <Link className="tab" href="/signup">
-                Sign up
-              </Link>
-            </>
-          )}
-        </div>
-      </div>
+    <>
+      <AppNav user={me} careerId={resolved ? track : null} onCareerChange={handleTrack} />
 
-      <motion.section
-        className="hero"
-        style={{ textAlign: 'center' }}
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <div className="eyebrow" style={{ margin: '0 auto 24px' }}>
-          Learn.it
-        </div>
-        <h1 className="title" style={{ margin: '0 auto' }}>
-          Build skills. Build projects.
-          <br />
-          <span className="out">Get job-ready.</span>
-        </h1>
-        <p className="hero-sub" style={{ margin: '20px auto 0' }}>
-          Tell Learn.it what you want to become. It tells you what to learn,
-          what to practice, what to build, and what to do next.
-        </p>
-      </motion.section>
+      <main>
+        <section className={s.hero}>
+          {resolved ? (
+            <AnimatePresence>
+              <motion.div
+                key={track}
+                className="track-bg-fade"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <TrackBackground track={track} intensity="full" />
+              </motion.div>
+            </AnimatePresence>
+          ) : null}
 
-      <motion.div
-        className="career-grid"
-        style={{ marginTop: 12, marginBottom: 60 }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-      >
-        {CAREERS.map((career) => (
-          <CareerCard key={career.id} career={career} onStart={handleStart} />
-        ))}
-      </motion.div>
+          <div className={s.heroInner}>
+            {/* Both tracks' copy share one grid cell, so the block is always
+                as tall as the taller one: switching never shifts the layout. */}
+            <div className={s.copyStack}>
+              {CAREERS.map((c) => {
+                const on = c.id === track;
+                const copy = COPY[c.id];
+                return (
+                  <motion.div
+                    key={c.id}
+                    className={s.copy}
+                    aria-hidden={on ? undefined : true}
+                    initial={false}
+                    animate={{ opacity: on ? 1 : 0, y: on ? 0 : -6 }}
+                    transition={
+                      userSwitched
+                        ? on
+                          ? { duration: 0.25, delay: 0.15, ease: EASE_OUT }
+                          : { duration: 0.15, ease: EASE_OUT }
+                        : { duration: 0 }
+                    }
+                  >
+                    <div className="eyebrow">{c.label} track</div>
+                    <h1 className={s.title}>
+                      {copy.line1}
+                      <br />
+                      <span className={s.accent}>{copy.line2}</span>
+                    </h1>
+                    <p className={s.sub}>{copy.sub}</p>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            <p className={s.stats + ' mono'}>
+              <AnimatedNumber value={numberedPhaseCount(roadmap)} /> phases ·{' '}
+              <AnimatedNumber value={roadmap.topics.length} /> topics ·{' '}
+              <AnimatedNumber value={roadmap.phaseProjects.length + 1} /> projects
+            </p>
+
+            <div className={s.actions}>
+              {cta}
+              <p className={s.note}>Free. Progress saves to your account.</p>
+            </div>
+          </div>
+        </section>
+
+        <Reveal as="section" className={s.section} aria-labelledby="how-title">
+          <h2 id="how-title" className={s.sectionTitle}>
+            How it works
+          </h2>
+          <ol className={s.steps}>
+            {STEPS.map((step) => (
+              <li key={step.n} className={s.step}>
+                <span className={s.stepNum}>{step.n}</span>
+                <span className={s.stepName}>{step.name}</span>
+                <span className={s.stepText}>{step.text}</span>
+              </li>
+            ))}
+          </ol>
+        </Reveal>
+
+        <section className={s.section} aria-labelledby="path-title">
+          <h2 id="path-title" className={s.sectionTitle}>
+            The {career.label} path
+          </h2>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={track}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {sections.map((section) => (
+                <div key={section.tier || 'all'} className={s.group}>
+                  {section.label ? <h3 className={s.groupTitle}>{section.label}</h3> : null}
+                  <ol className={s.items}>
+                    {section.phases.map((m, i) => {
+                      const phase = roadmap.phases[m.index];
+                      return (
+                        <ListItem key={m.index} index={i} as="li" className={s.item}>
+                          <span className={s.num} aria-hidden="true">
+                            {phase.numbered === false ? '+' : String(m.index + 1).padStart(2, '0')}
+                          </span>
+                          <span>{stripPhase(phase.name)}</span>
+                        </ListItem>
+                      );
+                    })}
+                  </ol>
+                </div>
+              ))}
+            </motion.div>
+          </AnimatePresence>
+        </section>
+
+        <Reveal as="section" className={s.closing}>
+          <p className={s.closingLine}>Ready when you are.</p>
+          {cta}
+        </Reveal>
+      </main>
 
       <footer>Built for one engineer&rsquo;s climb — Meerut → production</footer>
-    </div>
+    </>
   );
 }

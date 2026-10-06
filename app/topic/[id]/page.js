@@ -7,9 +7,10 @@
 // two steps in the same stepper, so the whole page reads as one guided path
 // instead of everything expanded at once.
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { motion } from 'motion/react';
+import { useEffect, useRef, useState } from 'react';
+import { useParams } from 'next/navigation';
+import Link from 'next/link';
+import { useReducedMotion } from 'motion/react';
 import {
   qid,
   topicSolved,
@@ -23,10 +24,16 @@ import { findTopicRoadmap } from '@/lib/roadmaps';
 import { prerequisiteGaps, recommendNextFrom } from '@/lib/roadmap-engine';
 import { getTopicMeta } from '@/lib/roadmap-meta';
 import { useProgress } from '@/components/useProgress';
-import QuestionRow from '@/components/QuestionRow';
-import ThemeToggle from '@/components/ThemeToggle';
+import AppNav from '@/components/AppNav';
+import PageHeader from '@/components/PageHeader';
+import PageEnter from '@/components/motion/PageEnter';
+import ProgressBar from '@/components/motion/ProgressBar';
+import Collapse from '@/components/motion/Collapse';
+import HereMarker from '@/components/motion/HereMarker';
+import QuestionRow, { CheckMark } from '@/components/QuestionRow';
 import PrereqBanner from '@/components/PrereqBanner';
 import QuizBlock from '@/components/QuizBlock';
+import styles from './topic.module.css';
 
 // A topic uses the checklist layout (concept checklist + practice side by
 // side) whenever its subtopics carry a checklist — true for every topic
@@ -35,45 +42,68 @@ function isChecklistTopic(top) {
   return !!(top.subtopics[0] && top.subtopics[0].checklist);
 }
 
+const stripPhase = (name) => name.replace(/^Phase \d+ — /, '');
+const titleCase = (s) => s.charAt(0) + s.slice(1).toLowerCase();
+
 export default function TopicPage() {
   const params = useParams();
-  const router = useRouter();
   const { roadmap, topic: top } = findTopicRoadmap(params.id);
-  const { progress, loading, error, isDone, toggle } = useProgress();
-  const [override, setOverride] = useState(null);
-
-  useEffect(() => {
-    setOverride(null);
-  }, [top && top.id]);
+  const { user, meta, progress, loading, error, isDone, toggle } = useProgress();
 
   if (loading) {
     return (
-      <main className="boot">
-        <div className="eyebrow">Learn.it</div>
-        <p className="sub">Loading…</p>
-      </main>
+      <>
+        <AppNav loading />
+        <main className="page" aria-busy="true" />
+      </>
     );
   }
 
   if (!top) {
     return (
-      <div className="detail">
-        <button className="back-btn" onClick={() => router.push('/dashboard')}>
-          ← Back to roadmap
-        </button>
-        <div className="detail-head">
-          <div className="detail-title">Topic not found</div>
-          <div className="detail-sub">That topic id doesn’t exist in either roadmap.</div>
-        </div>
-      </div>
+      <>
+        <AppNav user={user} careerId={meta.selectedCareer || null} active="roadmap" />
+        <PageEnter>
+          <PageHeader
+            back={{ href: '/dashboard', label: 'Home' }}
+            eyebrow="Topic"
+            title="Topic not found"
+            sub="That topic id doesn’t exist in either roadmap."
+          />
+        </PageEnter>
+      </>
     );
   }
+
+  // Keyed by topic so the open-step override resets when moving between topics.
+  return (
+    <>
+      <AppNav user={user} careerId={roadmap.id} active="roadmap" />
+      <TopicContent
+        key={top.id}
+        roadmap={roadmap}
+        top={top}
+        progress={progress}
+        error={error}
+        isDone={isDone}
+        toggle={toggle}
+      />
+    </>
+  );
+}
+
+function TopicContent({ roadmap, top, progress, error, isDone, toggle }) {
+  const [override, setOverride] = useState(null);
+  const headRefs = useRef([]);
+  const lastOpen = useRef(null);
+  const reduce = useReducedMotion();
 
   const { c, t } = topicSolved(top, progress);
   const meta = getTopicMeta(top.id);
   const gaps = prerequisiteGaps(top.id, progress);
   const projDone = projectDone(top.id, progress);
   const checklist = isChecklistTopic(top);
+  const phase = roadmap.phases[top.phase];
 
   const recommendation = recommendNextFrom(roadmap, top, progress);
   const nextTopic =
@@ -90,206 +120,248 @@ export default function TopicPage() {
   }
 
   const hasQuiz = !!(top.quiz && top.quiz.length);
-  const quizDone = hasQuiz && top.quiz.every((_, qi) => isDone(quizKey(top.id, qi)));
+  const quizAnswered = hasQuiz ? top.quiz.filter((_, qi) => isDone(quizKey(top.id, qi))).length : 0;
+  const quizDone = hasQuiz && quizAnswered === top.quiz.length;
 
   // steps: every subtopic, then Quiz (if present), then the checkpoint
   // project — one flat sequence, one open step at a time.
+  const quizIndex = top.subtopics.length;
   const stepCount = top.subtopics.length + (hasQuiz ? 1 : 0) + 1;
+  const projectIndex = stepCount - 1;
   const firstUnfinishedSubtopic = top.subtopics.findIndex((_, si) => !subtopicDone(si));
   const defaultIndex =
     firstUnfinishedSubtopic !== -1
       ? firstUnfinishedSubtopic
       : hasQuiz && !quizDone
-      ? top.subtopics.length
-      : stepCount - 1;
+      ? quizIndex
+      : projectIndex;
   const openIndex = override !== null ? override : defaultIndex;
 
-  function stepAt(index) {
-    if (index < top.subtopics.length) return { type: 'subtopic', si: index };
-    if (hasQuiz && index === top.subtopics.length) return { type: 'quiz' };
-    return { type: 'project' };
-  }
+  // When the open step changes and its head has scrolled up under the sticky
+  // nav, bring it back into view once the collapse has finished (spec 3.6).
+  // Skipped on first mount so the page never scrolls by itself on arrival.
+  useEffect(() => {
+    if (lastOpen.current === null || lastOpen.current === openIndex) {
+      lastOpen.current = openIndex;
+      return undefined;
+    }
+    lastOpen.current = openIndex;
+    const timer = setTimeout(() => {
+      const head = headRefs.current[openIndex];
+      if (!head) return;
+      const navH =
+        parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 64;
+      const y = head.getBoundingClientRect().top;
+      if (y < navH) {
+        window.scrollTo({ top: window.scrollY + y - navH - 16, behavior: reduce ? 'auto' : 'smooth' });
+      }
+    }, 320);
+    return () => clearTimeout(timer);
+  }, [openIndex, reduce]);
 
   function toggleOpen(index) {
     setOverride(index === openIndex ? null : index);
   }
 
-  return (
-    <div className="detail">
-      <div className="page-topbar">
-        <button className="back-btn" onClick={() => router.push('/roadmap/' + roadmap.id)}>
-          ← Back to roadmap
+  // One step = a <button> head + a Collapse body. The open (unfinished) step
+  // carries the page's single HereMarker. `body` is a function so only the
+  // open step's content is built (a closing step keeps its last render while
+  // it animates out).
+  function renderStep(index, { title, done, count, body }) {
+    const isOpen = openIndex === index;
+    const bodyId = 'step-body-' + index;
+    return (
+      <div className={'step' + (done ? ' done' : '') + (isOpen ? ' open' : '')} key={index}>
+        <button
+          type="button"
+          className="step-head"
+          ref={(el) => {
+            headRefs.current[index] = el;
+          }}
+          aria-label={title + (done ? ', complete' : '') + ', ' + count}
+          aria-expanded={isOpen}
+          aria-controls={bodyId}
+          onClick={() => toggleOpen(index)}
+        >
+          <span className="step-status" aria-hidden="true">
+            {done ? (
+              <span className="dot dot-done">✓</span>
+            ) : isOpen ? (
+              <HereMarker />
+            ) : (
+              <span className="dot dot-upcoming" />
+            )}
+          </span>
+          <span className="step-title">{title}</span>
+          <span className="step-count mono">{count}</span>
         </button>
-        <ThemeToggle />
-      </div>
-
-      <div className="detail-head">
-        <div className="detail-num mono">{c}/{t} COMPLETED</div>
-        <div className="detail-title">{top.title}</div>
-
-        <div className="detail-progress" style={{ gap: 14, flexWrap: 'wrap' }}>
-          <span className="ctag">Difficulty: {meta.difficulty}</span>
-          <span className="ctag">Estimated time: {meta.estimatedTime}</span>
+        <div id={bodyId}>
+          <Collapse open={isOpen}>
+            {isOpen ? <div className="step-body">{body()}</div> : null}
+          </Collapse>
         </div>
-
-        {top.learnMore ? (
-          <a className="concept-more" href={top.learnMore.url} target="_blank" rel="noopener noreferrer" style={{ marginTop: 10, display: 'inline-block' }}>
-            {top.learnMore.label} {'↗'}
-          </a>
-        ) : null}
-        {error ? <div className="detail-error">{error}</div> : null}
-
-        <PrereqBanner gaps={gaps} />
       </div>
+    );
+  }
 
-      <div className="stepper">
-        {top.subtopics.map((s, si) => {
-          const done = subtopicDone(si);
-          const isOpen = openIndex === si;
-          const doneC = s.q.filter((_, qi) => isDone(qid(top.id, si, qi))).length;
-          const { c: clDone, t: clTotal } = checklistProgress(top, si, progress);
-          const headCount = checklist ? `${clDone}/${clTotal}` : `${doneC}/${s.q.length}`;
-
-          return (
-            <div className={'step' + (done ? ' done' : '') + (isOpen ? ' open' : '')} key={si}>
-              <div className="step-head" onClick={() => toggleOpen(si)} role="button" tabIndex={0}>
-                <span className="step-status">{done ? '✓' : isOpen ? '●' : '○'}</span>
-                <span className="step-title">{s.title}</span>
-                <span className="step-count mono">{headCount}</span>
-              </div>
-
-              {isOpen ? (
-                <div className="step-body">
-                  {s.concepts ? (
-                    <div className="concept-block">
-                      <div className="concept-eyebrow">Why it matters</div>
-                      <ul className="concept-list">
-                        {s.concepts.map((cItem, ci) => (
-                          <li key={ci}>{cItem}</li>
-                        ))}
-                      </ul>
-                      {s.learnMore ? (
-                        <a className="concept-more" href={s.learnMore.url} target="_blank" rel="noopener noreferrer">
-                          {s.learnMore.label} {'↗'}
-                        </a>
-                      ) : null}
-                    </div>
-                  ) : null}
-
-                  {checklist ? (
-                    <div className="checklist-columns">
-                      <div className="checklist-col">
-                        <div className="col-label">Topics to learn <span className="mono">{clDone}/{clTotal}</span></div>
-                        {(s.checklist || []).map((name, ci) => {
-                          const id = checklistKey(top.id, si, ci);
-                          const cdone = isDone(id);
-                          return (
-                            <motion.div
-                              key={id}
-                              className={'q-row' + (cdone ? ' done' : '')}
-                              onClick={() => toggle(id)}
-                              role="button"
-                              tabIndex={0}
-                              whileHover={{ y: -2 }}
-                              whileTap={{ scale: 0.98 }}
-                              transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                  e.preventDefault();
-                                  toggle(id);
-                                }
-                              }}
-                            >
-                              <div className="q-check">{cdone ? '✓' : ''}</div>
-                              <div className="q-text">{name}</div>
-                            </motion.div>
-                          );
-                        })}
-                      </div>
-                      <div className="checklist-col">
-                        <div className="col-label">Practice <span className="mono">{doneC}/{s.q.length}</span></div>
-                        {s.q.map((q, qi) => {
-                          const id = qid(top.id, si, qi);
-                          return <QuestionRow key={id} q={q} id={id} done={isDone(id)} onToggle={toggle} />;
-                        })}
-                      </div>
-                    </div>
-                  ) : (
-                    s.q.map((q, qi) => {
-                      const id = qid(top.id, si, qi);
-                      return <QuestionRow key={id} q={q} id={id} done={isDone(id)} onToggle={toggle} />;
-                    })
-                  )}
-
-                  {si < top.subtopics.length - 1 ? (
-                    <button
-                      className="btn-primary"
-                      style={{ width: 'auto', padding: '10px 20px', marginTop: 8 }}
-                      onClick={() => setOverride(si + 1)}
-                    >
-                      Next: {top.subtopics[si + 1].title} →
-                    </button>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-          );
-        })}
-
-        {hasQuiz ? (
-          <div className={'step' + (quizDone ? ' done' : '') + (openIndex === top.subtopics.length ? ' open' : '')}>
-            <div className="step-head" onClick={() => toggleOpen(top.subtopics.length)} role="button" tabIndex={0}>
-              <span className="step-status">{quizDone ? '✓' : openIndex === top.subtopics.length ? '●' : '○'}</span>
-              <span className="step-title">Quiz</span>
-              <span className="step-count mono">
-                {top.quiz.filter((_, qi) => isDone(quizKey(top.id, qi))).length}/{top.quiz.length}
-              </span>
-            </div>
-            {openIndex === top.subtopics.length ? (
-              <div className="step-body">
-                <QuizBlock topic={top} isDone={isDone} toggle={toggle} />
-              </div>
+  function subtopicBody(s, si) {
+    const doneC = s.q.filter((_, qi) => isDone(qid(top.id, si, qi))).length;
+    const { c: clDone, t: clTotal } = checklistProgress(top, si, progress);
+    return (
+      <>
+        {s.concepts ? (
+          <div className="concept-block">
+            <div className="concept-eyebrow">Why it matters</div>
+            <ul className="concept-list">
+              {s.concepts.map((cItem, ci) => (
+                <li key={ci}>{cItem}</li>
+              ))}
+            </ul>
+            {s.learnMore ? (
+              <a
+                className={'link-arrow ' + styles.more}
+                href={s.learnMore.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {s.learnMore.label} <span aria-hidden="true">↗</span>
+              </a>
             ) : null}
           </div>
         ) : null}
 
-        <div className={'step' + (projDone ? ' done' : '') + (openIndex === stepCount - 1 ? ' open' : '')}>
-          <div className="step-head" onClick={() => toggleOpen(stepCount - 1)} role="button" tabIndex={0}>
-            <span className="step-status">{projDone ? '✓' : openIndex === stepCount - 1 ? '●' : '○'}</span>
-            <span className="step-title">Complete &amp; Continue</span>
-            <span className="step-count mono">{projDone ? 'done' : 'open'}</span>
-          </div>
-          {openIndex === stepCount - 1 ? (
-            <div className="step-body">
-              <div
-                className="mini-proj"
-                onClick={() => toggle(projectKey(top.id))}
-                role="button"
-                tabIndex={0}
-                style={{ cursor: 'pointer' }}
-              >
-                <div className="mini-proj-flag">{projDone ? 'Completed' : 'Checkpoint'}</div>
-                <div>
-                  <div className="mini-proj-title">{top.mini.title}{projDone ? ' ✓' : ''}</div>
-                  <div className="mini-proj-desc">{top.mini.desc}</div>
-                </div>
-              </div>
-
-              <div className="landing-cta" style={{ marginTop: 24 }}>
-                {nextTopic ? (
-                  <button className="btn-primary landing-btn" onClick={() => router.push('/topic/' + nextTopic.id)}>
-                    Next Topic: {nextTopic.title} →
+        {checklist ? (
+          <div className="checklist-columns">
+            <div className="checklist-col">
+              <div className="col-label">Topics to learn <span className="mono">{clDone}/{clTotal}</span></div>
+              {(s.checklist || []).map((name, ci) => {
+                const id = checklistKey(top.id, si, ci);
+                const cdone = isDone(id);
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    className={'q-row ' + styles.rowButton + (cdone ? ' done' : '')}
+                    aria-pressed={cdone}
+                    onClick={() => toggle(id)}
+                  >
+                    <span className="q-check" aria-hidden="true">
+                      <CheckMark done={cdone} />
+                    </span>
+                    <span className="q-text">{name}</span>
                   </button>
-                ) : (
-                  <button className="btn-primary landing-btn" onClick={() => router.push('/roadmap/' + roadmap.id)}>
-                    Back to Roadmap
-                  </button>
-                )}
-              </div>
+                );
+              })}
             </div>
-          ) : null}
-        </div>
+            <div className="checklist-col">
+              <div className="col-label">Practice <span className="mono">{doneC}/{s.q.length}</span></div>
+              {s.q.map((q, qi) => {
+                const id = qid(top.id, si, qi);
+                return <QuestionRow key={id} q={q} id={id} done={isDone(id)} onToggle={toggle} />;
+              })}
+            </div>
+          </div>
+        ) : (
+          s.q.map((q, qi) => {
+            const id = qid(top.id, si, qi);
+            return <QuestionRow key={id} q={q} id={id} done={isDone(id)} onToggle={toggle} />;
+          })
+        )}
+
+        {si < top.subtopics.length - 1 ? (
+          <div className="actions">
+            <button type="button" className="btn-ghost" onClick={() => setOverride(si + 1)}>
+              Next: {top.subtopics[si + 1].title} <span aria-hidden="true">→</span>
+            </button>
+          </div>
+        ) : null}
+      </>
+    );
+  }
+
+  const projectBody = () => (
+    <>
+      <button
+        type="button"
+        className={'mini-proj ' + styles.miniButton}
+        aria-pressed={projDone}
+        onClick={() => toggle(projectKey(top.id))}
+      >
+        <span className="mini-proj-flag">{projDone ? 'Completed' : 'Checkpoint'}</span>
+        <span className={styles.miniText}>
+          <span className="mini-proj-title">
+            {top.mini.title}{projDone ? ' ✓' : ''}
+          </span>
+          <span className="mini-proj-desc">{top.mini.desc}</span>
+        </span>
+      </button>
+
+      <div className="actions">
+        {nextTopic ? (
+          <Link className="btn-primary" href={'/topic/' + nextTopic.id}>
+            Next topic: {nextTopic.title} <span aria-hidden="true">→</span>
+          </Link>
+        ) : (
+          <Link className="btn-primary" href={'/roadmap/' + roadmap.id}>
+            Back to roadmap
+          </Link>
+        )}
       </div>
-    </div>
+    </>
+  );
+
+  return (
+    <PageEnter>
+      <PageHeader
+        back={{ href: '/roadmap/' + roadmap.id, label: roadmap.label + ' roadmap' }}
+        eyebrow={phase ? stripPhase(phase.name) : null}
+        title={top.title}
+      >
+        <div className="meta-stack">
+          <div className="meta-line">
+            {c}/{t} done · {titleCase(meta.difficulty)} · ~{meta.estimatedTime}
+          </div>
+          <ProgressBar size="sm" value={t ? (c / t) * 100 : 0} label="Topic progress" />
+        </div>
+        {top.learnMore ? (
+          <div className="actions">
+            <a className="link-arrow" href={top.learnMore.url} target="_blank" rel="noopener noreferrer">
+              {top.learnMore.label} <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+        ) : null}
+        {error ? <div className="detail-error">{error}</div> : null}
+        <PrereqBanner gaps={gaps} />
+      </PageHeader>
+
+      <div className="stepper">
+        {top.subtopics.map((s, si) => {
+          const doneC = s.q.filter((_, qi) => isDone(qid(top.id, si, qi))).length;
+          const { c: clDone, t: clTotal } = checklistProgress(top, si, progress);
+          return renderStep(si, {
+            title: s.title,
+            done: subtopicDone(si),
+            count: checklist ? `${clDone}/${clTotal}` : `${doneC}/${s.q.length}`,
+            body: () => subtopicBody(s, si),
+          });
+        })}
+
+        {hasQuiz
+          ? renderStep(quizIndex, {
+              title: 'Quiz',
+              done: quizDone,
+              count: `${quizAnswered}/${top.quiz.length}`,
+              body: () => <QuizBlock topic={top} isDone={isDone} toggle={toggle} />,
+            })
+          : null}
+
+        {renderStep(projectIndex, {
+          title: 'Complete & Continue',
+          done: projDone,
+          count: projDone ? 'done' : 'open',
+          body: projectBody,
+        })}
+      </div>
+    </PageEnter>
   );
 }

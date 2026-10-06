@@ -30,18 +30,22 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata = {
   title: 'Learn.it',
   description:
-    'A full-stack Java learning roadmap and daily practice tracker — DSA to deployment.',
+    'Guided roadmaps for Java Developers and AI Engineers: learn, practice, build.',
 };
 
 // Runs before React hydrates so the correct theme applies on first paint —
 // without this, the page would flash light then snap to dark (or vice versa)
-// for anyone who has a saved preference.
+// for anyone who has a saved preference. It also sets html[data-track] from
+// the last-used career so the track accent is right on first paint (AppNav is
+// the only other writer).
 const themeInitScript = `
 (function() {
   try {
     var saved = localStorage.getItem('ledger-theme');
     var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     document.documentElement.setAttribute('data-theme', theme);
+    var t = localStorage.getItem('learnit-track');
+    document.documentElement.setAttribute('data-track', t === 'ai-engineer' ? 'ai-engineer' : 'java-developer');
   } catch (e) {}
 })();
 `;
@@ -50,6 +54,7 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable}`}
     >
       <head>

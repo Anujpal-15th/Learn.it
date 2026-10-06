@@ -1,14 +1,16 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import Logo from '@/components/Logo';
+import AppNav from '@/components/AppNav';
+import CareerSwitcher from '@/components/CareerSwitcher';
+import Reveal from '@/components/motion/Reveal';
 import { getCareer } from '@/lib/roadmaps';
 
 export default function SignupPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<AppNav minimal />}>
       <SignupForm />
     </Suspense>
   );
@@ -17,8 +19,21 @@ export default function SignupPage() {
 function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const careerId = searchParams.get('career');
-  const career = careerId ? getCareer(careerId) : null;
+  const param = searchParams.get('career');
+  // Track: ?career, else the last-used track (read after mount), else Java.
+  // Before that read, nothing is shown, so AppNav doesn't write a guess over
+  // the saved track and the pill doesn't slide on load.
+  const [stored, setStored] = useState(null);
+  const [resolved, setResolved] = useState(false);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('learnit-track');
+      if (getCareer(saved)) setStored(saved);
+    } catch {}
+    setResolved(true);
+  }, []);
+  const shownId = getCareer(param) ? param : resolved ? stored || 'java-developer' : null;
+  const career = getCareer(shownId || 'java-developer');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,18 +56,14 @@ function SignupForm() {
         setBusy(false);
         return;
       }
-      // If they arrived from a career card, carry that choice straight
-      // through to the roadmap instead of dropping them on an empty dashboard.
-      if (career) {
-        await fetch('/api/progress', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ progress: {}, growth: {}, meta: { selectedCareer: career.id } }),
-        });
-        router.push('/roadmap/' + career.id);
-      } else {
-        router.push('/dashboard');
-      }
+      // There is always a track, so carry it straight through to its roadmap
+      // instead of dropping the learner on an empty dashboard.
+      await fetch('/api/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ progress: {}, growth: {}, meta: { selectedCareer: career.id } }),
+      });
+      router.push('/roadmap/' + career.id);
       router.refresh();
     } catch {
       setError('Network error — please try again.');
@@ -60,69 +71,74 @@ function SignupForm() {
     }
   }
 
+  function handleCareer(id) {
+    router.replace('/signup?career=' + id, { scroll: false });
+  }
+
   return (
-    <div className="auth-wrap">
-      <div className="auth-card">
-        <div className="auth-brand">
-          <Logo size={24} />
-          <span className="mark">Learn.it</span>
-          <span className="sub">Sign up</span>
-        </div>
-        <h1 className="auth-title">Start the climb.</h1>
-        <p className="auth-lead">
-          {career
-            ? `Create an account to start the ${career.label} roadmap. Your progress saves to your account, not the browser.`
-            : 'Create an account to track your roadmap. Your progress saves to your account, not the browser — sign in anywhere.'}
-        </p>
+    <>
+      <AppNav minimal careerId={shownId} />
+      <main className="auth-wrap">
+        <Reveal className="auth-card">
+          <div className="auth-brand">
+            <span className="sub">Sign up</span>
+          </div>
+          <h1 className="auth-title">Start the climb.</h1>
+          <p className="auth-lead">Your progress saves to your account. Sign in anywhere.</p>
 
-        <form onSubmit={handleSubmit} noValidate>
           <div className="field">
-            <label htmlFor="name">Name (optional)</label>
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Anuj"
-              autoComplete="name"
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              autoComplete="email"
-              required
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="At least 8 characters"
-              autoComplete="new-password"
-              required
-            />
+            <CareerSwitcher value={shownId} onChange={handleCareer} size="sm" block />
           </div>
 
-          <button className="btn-primary" type="submit" disabled={busy}>
-            {busy ? 'Creating…' : 'Create account'}
-          </button>
-        </form>
+          <form onSubmit={handleSubmit} noValidate>
+            <div className="field">
+              <label htmlFor="name">Name (optional)</label>
+              <input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Anuj"
+                autoComplete="name"
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="email">Email</label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                autoComplete="email"
+                required
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 8 characters"
+                autoComplete="new-password"
+                required
+              />
+            </div>
 
-        {error ? <p className="auth-error">{error}</p> : null}
+            <button className="btn-primary" type="submit" disabled={busy}>
+              {busy ? 'Creating…' : 'Create account'}
+            </button>
+          </form>
 
-        <p className="auth-alt">
-          Already have an account? <Link href="/login">Log in</Link>
-        </p>
-      </div>
-    </div>
+          {error ? <p className="auth-error">{error}</p> : null}
+
+          <p className="auth-alt">
+            Already have an account? <Link href="/login">Log in</Link>
+          </p>
+        </Reveal>
+      </main>
+    </>
   );
 }

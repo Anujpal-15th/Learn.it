@@ -1,0 +1,22 @@
+/* Button resets for the things that toggle on the topic page. Their look
+   comes from the global .q-row / .mini-proj; these only remove browser
+   button chrome. */
+.rowButton,
+.miniButton {
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Title + description stacked inside the checkpoint button (spans, since a
+   <button> may only hold phrasing content). */
+.miniText > span {
+  display: block;
+}
+
+/* Gap between a concept list and its "learn more" link. */
+.more {
+  margin-top: 14px;
+}

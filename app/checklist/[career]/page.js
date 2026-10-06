@@ -4,144 +4,128 @@
 // employment signal. It's a rollup of which named skill areas are complete
 // for this career vs. which still need work, computed from the same
 // topic/interview/project completion data as everything else. Framed as
-// "learning areas completed" / "recommended areas to strengthen" rather
-// than "you are job-ready," on purpose — this app is a progress tracker,
-// not an employment predictor.
+// "covered" / "to strengthen" rather than "you are job-ready," on purpose —
+// this app is a progress tracker, not an employment predictor.
 
 import { useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { getRoadmap, getCareer } from '@/lib/roadmaps';
 import { readinessChecklist, readinessGates } from '@/lib/roadmap-engine';
 import { useProgress } from '@/components/useProgress';
-import ThemeToggle from '@/components/ThemeToggle';
+import AppNav from '@/components/AppNav';
+import PageHeader from '@/components/PageHeader';
+import PageEnter from '@/components/motion/PageEnter';
+import ListItem from '@/components/motion/ListItem';
+import AnimatedNumber from '@/components/motion/AnimatedNumber';
+import ProgressBar from '@/components/motion/ProgressBar';
+import styles from './checklist.module.css';
+
+function ItemList({ items, done }) {
+  return (
+    <ul className="readiness-list">
+      {items.map((item, i) => (
+        <ListItem as="li" index={i} className={'readiness-item' + (done ? ' done' : '')} key={item.label}>
+          <span className="readiness-check" aria-hidden="true">{done ? '✓' : ''}</span>
+          <span>{item.label}</span>
+        </ListItem>
+      ))}
+    </ul>
+  );
+}
 
 export default function ChecklistPage() {
   const params = useParams();
-  const router = useRouter();
   const careerId = params.career;
   const roadmap = getRoadmap(careerId);
   const career = getCareer(careerId);
-  const { progress, loading, error } = useProgress();
+  const { user, meta, progress, loading, error } = useProgress();
 
   const items = useMemo(() => readinessChecklist(careerId, progress), [careerId, progress]);
-  // Named career-readiness gates from the curriculum plan — null for a
-  // roadmap with no tiers (AI Engineer), so this section just doesn't render.
+  // Named career-readiness gates — readinessGates() returns null for any
+  // roadmap without the Java tiers (AI Engineer), so the section only renders
+  // when it's non-null.
   const gates = useMemo(() => (roadmap ? readinessGates(roadmap, progress) : null), [roadmap, progress]);
-  const doneCount = items.filter((i) => i.done).length;
   const completed = items.filter((i) => i.done);
   const toStrengthen = items.filter((i) => !i.done);
+  const pct = items.length ? Math.round((completed.length / items.length) * 100) : 0;
 
   if (loading) {
     return (
-      <main className="boot">
-        <div className="eyebrow">Learn.it</div>
-        <p className="sub">Loading…</p>
-      </main>
+      <>
+        <AppNav loading />
+        <main className="page" aria-busy="true" />
+      </>
     );
   }
 
   if (!roadmap || !career) {
     return (
-      <div className="detail">
-        <button className="back-btn" onClick={() => router.push('/dashboard')}>
-          ← Back to dashboard
-        </button>
-        <div className="detail-head">
-          <div className="detail-title">Checklist not found</div>
-        </div>
-      </div>
+      <>
+        <AppNav user={user} careerId={meta.selectedCareer || null} active="roadmap" />
+        <PageEnter>
+          <PageHeader back={{ href: '/dashboard', label: 'Home' }} eyebrow="Readiness" title="Checklist not found" />
+        </PageEnter>
+      </>
     );
   }
 
   return (
-    <div className="detail">
-      <div className="page-topbar">
-        <button className="back-btn" onClick={() => router.push('/roadmap/' + roadmap.id)}>
-          ← Back to roadmap
-        </button>
-        <ThemeToggle />
-      </div>
+    <>
+      <AppNav user={user} careerId={roadmap.id} active="roadmap" />
 
-      <div className="detail-head">
-        <div className="detail-num mono">LEARNING READINESS CHECKLIST</div>
-        <div className="detail-title">{career.label}</div>
-        <div className="detail-sub">
-          This is not a guarantee of employment and it does not predict
-          whether you'll get hired — it's a checklist of learning areas
-          completed toward {career.label}, and which ones to strengthen next.
-        </div>
-        <div className="detail-progress">
-          <div className="bar-bg">
-            <div className="bar-fill" style={{ width: (items.length ? Math.round((doneCount / items.length) * 100) : 0) + '%' }} />
+      <PageEnter>
+        <PageHeader
+          back={{ href: '/roadmap/' + roadmap.id, label: career.label + ' roadmap' }}
+          eyebrow="Readiness"
+          title="What you’ve covered"
+          sub="A learning checklist, not a hiring prediction."
+        >
+          <div className="progress-line">
+            <span><AnimatedNumber value={pct} suffix="%" /></span>
+            <span className="meta-line">{completed.length}/{items.length} learning areas covered</span>
+            <ProgressBar value={pct} label="Checklist progress" />
           </div>
-          <span className="mono" style={{ fontSize: 12 }}>{doneCount}/{items.length} completed</span>
-        </div>
-        {error ? <div className="detail-error">{error}</div> : null}
-      </div>
+          {error ? <div className="detail-error">{error}</div> : null}
+        </PageHeader>
 
-      {gates ? (
-        <>
-          <div className="sub-head">
-            <span className="sub-title">Career readiness gates</span>
-            <div className="sub-line" />
-          </div>
-          <div className="readiness-list" style={{ marginBottom: 32 }}>
-            {Object.values(gates).map((gate) => (
-              <div className="readiness-item" key={gate.label} style={{ display: 'block' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                  <span className="readiness-check">{gate.done ? '✓' : ''}</span>
-                  <span>{gate.label}</span>
-                  <span className="mono" style={{ marginLeft: 'auto', fontSize: 12 }}>
-                    {gate.completed}/{gate.total}
-                  </span>
-                </div>
-                <div className="bar-bg">
-                  <div
-                    className="bar-fill"
-                    style={{ width: (gate.total ? Math.round((gate.completed / gate.total) * 100) : 0) + '%' }}
+        {gates ? (
+          <>
+            <h2 className="section-title">Career readiness gates</h2>
+            <div className="gate-list">
+              {Object.values(gates).map((gate) => (
+                <div className="gate-row" key={gate.label}>
+                  <span>{gate.label}{gate.done ? ' ✓' : ''}</span>
+                  <ProgressBar
+                    size="sm"
+                    value={gate.total ? (gate.completed / gate.total) * 100 : 0}
+                    label={gate.label}
                   />
+                  <span className="meta-line">{gate.completed}/{gate.total}</span>
                 </div>
-              </div>
-            ))}
-          </div>
-        </>
-      ) : null}
-
-      <div className="sub-head">
-        <span className="sub-title">Learning areas completed</span>
-        <div className="sub-line" />
-        <span className="sub-count mono">{completed.length}</span>
-      </div>
-      {completed.length ? (
-        <div className="readiness-list" style={{ marginBottom: 32 }}>
-          {completed.map((item) => (
-            <div className="readiness-item done" key={item.label}>
-              <span className="readiness-check">✓</span>
-              <span>{item.label}</span>
+              ))}
             </div>
-          ))}
-        </div>
-      ) : (
-        <p className="hero-sub" style={{ marginBottom: 32 }}>None yet — every area below is still open.</p>
-      )}
+          </>
+        ) : null}
 
-      <div className="sub-head">
-        <span className="sub-title">Recommended areas to strengthen</span>
-        <div className="sub-line" />
-        <span className="sub-count mono">{toStrengthen.length}</span>
-      </div>
-      {toStrengthen.length ? (
-        <div className="readiness-list">
-          {toStrengthen.map((item) => (
-            <div className="readiness-item" key={item.label}>
-              <span className="readiness-check" />
-              <span>{item.label}</span>
-            </div>
-          ))}
+        <div className={'cols-2' + (gates ? ' ' + styles.columns : '')}>
+          <section>
+            <h2 className="section-title">Covered</h2>
+            {completed.length ? (
+              <ItemList items={completed} done />
+            ) : (
+              <p className={styles.empty}>None yet — every area is still open.</p>
+            )}
+          </section>
+          <section>
+            <h2 className="section-title">To strengthen</h2>
+            {toStrengthen.length ? (
+              <ItemList items={toStrengthen} done={false} />
+            ) : (
+              <p className={styles.empty}>Every learning area for {career.label} is complete.</p>
+            )}
+          </section>
         </div>
-      ) : (
-        <p className="hero-sub">Every learning area for {career.label} is complete.</p>
-      )}
-    </div>
+      </PageEnter>
+    </>
   );
 }

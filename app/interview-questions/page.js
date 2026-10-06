@@ -1,130 +1,102 @@
 'use client';
 
-// Interview Q&A — commonly-asked interview questions, grouped by category,
-// now split across both career tracks. Each item IS a question to be able
-// to answer, checked off once you can confidently answer it. Defaults to
-// whichever track matches the learner's selected career.
+// Interview Q&A: commonly-asked interview questions, grouped by category,
+// for the selected career track (the top-bar switcher changes it). Each item
+// IS a question to be able to answer, checked off once you can confidently
+// answer it.
 
-import { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { INTERVIEW_CATEGORIES, interviewKey } from '@/lib/interview-questions';
 import { INTERVIEW_CATEGORIES_AI } from '@/lib/interview-questions-ai';
+import { getCareer } from '@/lib/roadmaps';
 import { useProgress } from '@/components/useProgress';
-import ThemeToggle from '@/components/ThemeToggle';
-
-const TRACKS = {
-  java: { label: 'Java Developer', categories: INTERVIEW_CATEGORIES },
-  ai: { label: 'AI Engineer', categories: INTERVIEW_CATEGORIES_AI },
-};
+import AppNav from '@/components/AppNav';
+import PageHeader from '@/components/PageHeader';
+import PageEnter from '@/components/motion/PageEnter';
+import ListItem from '@/components/motion/ListItem';
+import ProgressBar from '@/components/motion/ProgressBar';
+import AnimatedNumber from '@/components/motion/AnimatedNumber';
+import rows from '../practice/check-row.module.css';
 
 export default function InterviewQuestionsPage() {
-  const router = useRouter();
-  const { meta, loading, error, isDone, toggle } = useProgress();
-  const [track, setTrack] = useState(null);
-
-  const activeTrack = track || (meta.selectedCareer === 'ai-engineer' ? 'ai' : 'java');
+  const { user, meta, loading, error, isDone, toggle, setSelectedCareer } = useProgress();
 
   if (loading) {
     return (
-      <main className="boot">
-        <div className="eyebrow">Learn.it</div>
-        <p className="sub">Loading interview questions…</p>
-      </main>
+      <>
+        <AppNav loading />
+        <main className="page" aria-busy="true" />
+      </>
     );
   }
 
-  const categories = TRACKS[activeTrack].categories;
+  const isAi = meta.selectedCareer === 'ai-engineer';
+  const career = getCareer(isAi ? 'ai-engineer' : 'java-developer');
+  const categories = isAi ? INTERVIEW_CATEGORIES_AI : INTERVIEW_CATEGORIES;
   const total = categories.reduce((n, c) => n + c.items.length, 0);
   const solved = categories.reduce(
     (n, c) => n + c.items.filter((it) => isDone(interviewKey(it.slug))).length,
     0
   );
+  const pct = total ? Math.round((solved / total) * 100) : 0;
 
   return (
-    <div className="detail">
-      <div className="page-topbar">
-        <button className="back-btn" onClick={() => router.push('/dashboard')}>
-          ← Back to roadmap
-        </button>
-        <ThemeToggle />
-      </div>
+    <>
+      <AppNav user={user} careerId={meta.selectedCareer || null} active="practice" onCareerChange={setSelectedCareer} />
 
-      <div className="detail-head">
-        <div className="detail-num mono">REFERENCE</div>
-        <div className="detail-title">Interview Q&amp;A</div>
-        <div className="detail-sub">
-          Commonly-asked interview questions — check one off once you can
-          confidently answer it out loud, not just recognize it.
-        </div>
-
-        <div className="landing-cta" style={{ marginTop: 14, marginBottom: 6 }}>
-          {Object.entries(TRACKS).map(([key, t]) => (
-            <button
-              key={key}
-              className={activeTrack === key ? 'btn-primary' : 'back-btn'}
-              onClick={() => setTrack(key)}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="detail-progress">
-          <div className="bar-bg">
-            <div className="bar-fill" style={{ width: (total ? Math.round((solved / total) * 100) : 0) + '%' }} />
+      <PageEnter>
+        <PageHeader
+          back={{ href: '/practice', label: 'Practice' }}
+          eyebrow={career.label}
+          title="Interview Q&A"
+          sub="Check a question off once you can answer it out loud, not just recognize it."
+        >
+          <div className="progress-line">
+            <span>
+              <AnimatedNumber value={pct} suffix="%" />
+            </span>
+            <span className="meta-line">{solved}/{total} ready</span>
+            <ProgressBar value={pct} label="Interview Q&A progress" />
           </div>
-          <span className="mono" style={{ fontSize: 12 }}>{solved}/{total} ready</span>
-        </div>
-        {error ? <div className="detail-error">{error}</div> : null}
-      </div>
+          {error ? <div className="detail-error" role="alert">{error}</div> : null}
+        </PageHeader>
 
-      {categories.map((cat) => {
-        const doneC = cat.items.filter((it) => isDone(interviewKey(it.slug))).length;
-        return (
-          <div className="sub-block" key={cat.name}>
-            <div className="sub-head">
-              <span className="bank-group-title">{cat.name}</span>
-              <div className="sub-line" />
-              <span className="sub-count mono">{doneC}/{cat.items.length}</span>
-            </div>
-            <a
-              className="concept-more"
-              href={cat.source.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ display: 'inline-block', marginBottom: 12 }}
-            >
-              {cat.source.label} {'↗'}
-            </a>
+        {categories.map((cat, i) => {
+          const doneC = cat.items.filter((it) => isDone(interviewKey(it.slug))).length;
+          return (
+            <ListItem as="section" index={i} className="sub-block" key={career.id + cat.name}>
+              <div className="sub-head">
+                <h2 className="bank-group-title">{cat.name}</h2>
+                <div className="sub-line" />
+                <span className="sub-count mono">{doneC}/{cat.items.length}</span>
+              </div>
+              <a
+                className={'link-arrow ' + rows.source}
+                href={cat.source.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {cat.source.label} <span aria-hidden="true">↗</span>
+              </a>
 
-            {cat.items.map((item) => {
-              const id = interviewKey(item.slug);
-              const done = isDone(id);
-              return (
-                <div
-                  key={item.slug}
-                  className={'q-row' + (done ? ' done' : '')}
-                  onClick={() => toggle(id)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      toggle(id);
-                    }
-                  }}
-                >
-                  <div className="q-check">{done ? '✓' : ''}</div>
-                  <div className="q-text">
-                    <div>{item.q}</div>
-                    <div className="algo-desc">{item.d}</div>
+              {cat.items.map((item) => {
+                const id = interviewKey(item.slug);
+                const done = isDone(id);
+                return (
+                  <div key={item.slug} className={'q-row' + (done ? ' done' : '')}>
+                    <button type="button" className={rows.toggle} aria-pressed={done} onClick={() => toggle(id)}>
+                      <span className="q-check" aria-hidden="true">{done ? '✓' : ''}</span>
+                      <span className="q-text">
+                        <span className={rows.line}>{item.q}</span>
+                        <span className={'algo-desc ' + rows.line}>{item.d}</span>
+                      </span>
+                    </button>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        );
-      })}
-    </div>
+                );
+              })}
+            </ListItem>
+          );
+        })}
+      </PageEnter>
+    </>
   );
 }

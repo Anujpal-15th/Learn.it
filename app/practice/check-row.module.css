@@ -1,0 +1,28 @@
+/* Checkable rows on the reference and interview banks (algorithms,
+   backend-topics, networking, interview-questions). The .q-row is a plain
+   container; the check + text is one <button> that toggles, and any learn
+   link is its sibling, because a link can't sit inside a button. */
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Spans inside the button (a button only allows phrasing content). */
+.line {
+  display: block;
+}
+
+/* Category source link above a group's rows. */
+.source {
+  margin-bottom: 12px;
+}

@@ -1,0 +1,272 @@
+/* AppNav (spec sections 2 and 6). Height always equals --nav-h
+   (64px; 104px at <=560px where the switcher gets its own row). */
+
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: var(--nav-h);
+  background: var(--topbar-bg);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--faint);
+}
+
+.row {
+  position: relative; /* anchors the popover / menu panel */
+  height: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  grid-template-areas: 'brand switch right';
+  align-items: center;
+  column-gap: 16px;
+}
+
+.brand {
+  grid-area: brand;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.mark {
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+  font-style: italic;
+  font-size: 19px;
+  letter-spacing: -0.2px;
+}
+
+.switch {
+  grid-area: switch;
+  min-width: 0;
+}
+
+.right {
+  grid-area: right;
+  justify-self: end;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Desktop tabs: the active one gets a static 2px accent underline sitting
+   on the bar's bottom hairline. */
+.tabs {
+  align-self: stretch;
+  display: flex;
+  margin-right: 6px;
+}
+
+.tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 11px;
+  color: var(--mid);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.15s var(--ease-ui);
+}
+
+.tab:hover,
+.tab[aria-current='page'] {
+  color: var(--ink);
+}
+
+.tab[aria-current='page']::after {
+  content: '';
+  position: absolute;
+  left: 11px;
+  right: 11px;
+  bottom: -1px;
+  height: 2px;
+  background: var(--accent);
+}
+
+.iconBtn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--mid);
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.15s var(--ease-ui), background-color 0.15s var(--ease-ui);
+}
+
+.iconBtn:hover,
+.iconBtn[aria-expanded='true'] {
+  color: var(--ink);
+  background: var(--accent-soft);
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Account popover and mobile menu panel share one floating surface,
+   right-aligned with the bar's content edge. */
+.pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 32px;
+  min-width: 220px;
+  max-width: calc(100vw - 32px);
+  padding: 8px;
+  background: var(--paper2);
+  border: 1px solid var(--faint);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.panel {
+  width: 280px;
+}
+
+.panelTabs {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--faint);
+}
+
+.panelTab {
+  display: block;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.15s var(--ease-ui);
+}
+
+.panelTab:hover {
+  background: var(--accent-soft);
+}
+
+.panelTab[aria-current='page'] {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.panelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px 2px 12px;
+  margin-bottom: 6px;
+  color: var(--mid);
+  font-size: 14px;
+}
+
+.account {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px 6px;
+}
+
+.panel .account {
+  border-top: 1px solid var(--faint);
+  padding-top: 12px;
+}
+
+.accountName {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.accountEmail {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--mid);
+  overflow-wrap: anywhere;
+}
+
+.logout {
+  align-self: flex-start;
+  margin-top: 10px;
+}
+
+/* --- Responsive (keep these last: they override the display values above). --- */
+
+@media (min-width: 1025px) {
+  .narrow {
+    display: none;
+  }
+}
+
+/* 561-1024px: Logo + switcher | Search + menu. */
+@media (max-width: 1024px) {
+  .wide,
+  .mark {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .row {
+    padding: 0 16px;
+  }
+  .pop {
+    right: 16px;
+  }
+}
+
+/* <=560px: two rows (56 + 48). The switcher is never in the menu. */
+@media (max-width: 560px) {
+  .row {
+    grid-template-columns: auto 1fr;
+    grid-template-rows: 56px 48px;
+    grid-template-areas:
+      'brand right'
+      'switch switch';
+  }
+  .right {
+    align-self: center;
+  }
+  .switch .switcher {
+    display: grid;
+    width: 100%;
+  }
+}
+
+/* Auth pages: logo + theme only, one 64px row at every width. */
+.minimal {
+  height: 64px;
+}
+
+.minimal .row {
+  grid-template-columns: auto 1fr;
+  grid-template-rows: 100%;
+  grid-template-areas: 'brand right';
+}
+
+.minimal .mark {
+  display: inline;
+}

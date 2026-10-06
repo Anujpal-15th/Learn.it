@@ -10,8 +10,8 @@ export default function PrereqBanner({ gaps }) {
   if (!gaps || gaps.length === 0) return null;
 
   return (
-    <div className="prereq-banner">
-      <div className="prereq-banner-label">Recommended prerequisites</div>
+    <aside className="prereq-banner" aria-labelledby="prereq-banner-label">
+      <div className="prereq-banner-label" id="prereq-banner-label">Recommended prerequisites</div>
       <p className="prereq-banner-sub">
         You can continue anyway — these just make this topic easier.
       </p>
@@ -25,6 +25,6 @@ export default function PrereqBanner({ gaps }) {
           </li>
         ))}
       </ul>
-    </div>
+    </aside>
   );
 }

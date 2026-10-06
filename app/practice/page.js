@@ -1,139 +1,145 @@
 'use client';
 
-// Practice — "Can I actually do this?" A hub of existing practice content
-// regrouped by subject instead of scattered across 5 separate nav items.
-// No new questions: Java/SQL/Spring Boot/System Design are filtered views
-// over the same per-topic practice questions already in topics.js (same
-// derivation /leetcode already used); DSA and Interview just link to the
-// existing, unchanged /leetcode and /interview-questions pages.
+// Practice: a hub of the roadmap's practice content, regrouped by subject.
+// Subject tiles are UI-only groupings of each track's topics
+// (lib/practice-groups.js), counted from the same per-topic practice
+// questions the topic pages use. DSA, Interview and the Java reference
+// lists link to their own banks.
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { TOPICS, qid } from '@/lib/topics';
-import { getRoadmap } from '@/lib/roadmaps';
-import { PRACTICE_GROUPS } from '@/lib/practice-groups';
+import { qid } from '@/lib/topics';
+import { getRoadmap, getCareer, findTopicRoadmap } from '@/lib/roadmaps';
+import { getPracticeGroups } from '@/lib/practice-groups';
 import { useProgress } from '@/components/useProgress';
 import AppNav from '@/components/AppNav';
+import PageHeader from '@/components/PageHeader';
+import PageEnter from '@/components/motion/PageEnter';
+import Reveal from '@/components/motion/Reveal';
+import ProgressBar from '@/components/motion/ProgressBar';
+import AnimatedNumber from '@/components/motion/AnimatedNumber';
 
 function groupCounts(group, progress) {
   let total = 0;
   let solved = 0;
+  const titles = [];
   group.topicIds.forEach((tid) => {
-    const top = TOPICS.find((t) => t.id === tid);
-    if (!top) return;
-    top.subtopics.forEach((s, si) => {
+    const { topic } = findTopicRoadmap(tid);
+    if (!topic) return;
+    titles.push(topic.title);
+    topic.subtopics.forEach((s, si) => {
       s.q.forEach((q, qi) => {
         total++;
-        if (progress && progress[qid(tid, si, qi)]) solved++;
+        if (progress[qid(tid, si, qi)]) solved++;
       });
     });
   });
-  return { total, solved };
+  return { total, solved, titles };
 }
 
+const REFERENCE = [
+  { href: '/algorithms', title: 'Algorithm List', desc: 'Named algorithms worth knowing.' },
+  { href: '/backend-topics', title: 'Backend Topics', desc: 'A glossary of backend engineering.' },
+  { href: '/networking', title: 'Networking', desc: 'The layer under every API call.' },
+];
+
 export default function PracticePage() {
-  const router = useRouter();
-  const { user, progress, meta, loading } = useProgress();
-  const careerId = meta.selectedCareer;
+  const { user, progress, meta, loading, setSelectedCareer } = useProgress();
+  const careerId = meta.selectedCareer || null;
   const roadmap = careerId ? getRoadmap(careerId) : null;
-  const hasDsa = !!(roadmap && roadmap.topics.some((t) => t.phase !== undefined && roadmap.phases[t.phase] && roadmap.phases[t.phase].tier === 'dsa'));
-  const isJavaTrack = careerId === 'java-developer';
 
   if (loading) {
     return (
-      <main className="boot">
-        <div className="eyebrow">Learn.it</div>
-        <p className="sub">Loading…</p>
-      </main>
-    );
-  }
-
-  if (!careerId) {
-    return (
       <>
-        <AppNav user={user} active="practice" />
-        <div className="detail">
-          <div className="detail-head">
-            <div className="detail-title">Pick a career first</div>
-            <div className="detail-sub">Practice is scoped to your roadmap.</div>
-            <div className="landing-cta" style={{ marginTop: 20 }}>
-              <Link className="btn-primary landing-btn" href="/dashboard">Go to Home</Link>
-            </div>
-          </div>
-        </div>
+        <AppNav loading />
+        <main className="page" aria-busy="true" />
       </>
     );
   }
 
+  if (!roadmap) {
+    return (
+      <>
+        <AppNav user={user} careerId={null} active="practice" onCareerChange={setSelectedCareer} />
+        <PageEnter>
+          <PageHeader
+            eyebrow="Practice"
+            title="Pick your track"
+            sub="Practice follows your roadmap. Choose a track from the switcher in the top bar."
+          />
+        </PageEnter>
+      </>
+    );
+  }
+
+  const career = getCareer(careerId);
+  const hasDsa = roadmap.phases.some((p) => p.tier === 'dsa');
+  const isJava = careerId === 'java-developer';
+
   return (
     <>
-      <AppNav user={user} careerId={careerId} active="practice" />
+      <AppNav user={user} careerId={careerId} active="practice" onCareerChange={setSelectedCareer} />
 
-      <div className="detail">
-        <div className="detail-head">
-          <div className="detail-num mono">PRACTICE</div>
-          <div className="detail-title">Can I actually do this?</div>
-          <div className="detail-sub">Every practice question in the roadmap, grouped by subject.</div>
-        </div>
+      <PageEnter>
+        <PageHeader
+          eyebrow="Practice"
+          title="Practice by subject"
+          sub={`Every practice question in the ${career.label} roadmap, grouped by subject.`}
+        />
 
-        <div className="practice-grid">
-          {isJavaTrack &&
-            Object.entries(PRACTICE_GROUPS).map(([key, group]) => {
-              const { total, solved } = groupCounts(group, progress);
-              return (
-                <div
-                  className="card"
-                  key={key}
-                  onClick={() => router.push('/practice/' + key)}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <div>
-                    <div className="ctitle">{group.label}</div>
-                    <div className="cmeta">{group.topicIds.length} topic{group.topicIds.length === 1 ? '' : 's'}</div>
-                  </div>
-                  <div className="progress-row">
-                    <div className="bar-bg">
-                      <div className="bar-fill" style={{ width: (total ? Math.round((solved / total) * 100) : 0) + '%' }} />
-                    </div>
-                    <span className="ctag">{solved}/{total}</span>
-                  </div>
-                </div>
-              );
-            })}
+        <Reveal className="tile-grid">
+          {Object.entries(getPracticeGroups(careerId)).map(([key, group]) => {
+            const { total, solved, titles } = groupCounts(group, progress);
+            const pct = total ? Math.round((solved / total) * 100) : 0;
+            return (
+              <Link className="tile" href={'/practice/' + key} key={key}>
+                <span className="tile-eyebrow">
+                  {titles.length} topic{titles.length === 1 ? '' : 's'}
+                </span>
+                <span className="tile-title">{group.label}</span>
+                <span className="tile-desc">{titles.join(' · ')}</span>
+                <span className="tile-foot">
+                  <ProgressBar value={pct} size="sm" label={group.label + ' progress'} />
+                  <span className="tile-count">
+                    <AnimatedNumber value={solved} />/{total}
+                  </span>
+                </span>
+                <span className="row-go" aria-hidden="true">›</span>
+              </Link>
+            );
+          })}
 
           {hasDsa ? (
-            <div className="card" onClick={() => router.push('/leetcode')} role="button" tabIndex={0}>
-              <div>
-                <div className="ctitle">DSA</div>
-                <div className="cmeta">Every LeetCode problem in the roadmap</div>
-              </div>
-              <div className="cmeta">Open the bank →</div>
-            </div>
+            <Link className="tile" href="/leetcode">
+              <span className="tile-eyebrow">Problem bank</span>
+              <span className="tile-title">DSA</span>
+              <span className="tile-desc">Every LeetCode problem in the roadmap, in one place.</span>
+              <span className="row-go" aria-hidden="true">›</span>
+            </Link>
           ) : null}
 
-          <div className="card" onClick={() => router.push('/interview-questions')} role="button" tabIndex={0}>
-            <div>
-              <div className="ctitle">Interview</div>
-              <div className="cmeta">Commonly-asked questions, both tracks</div>
-            </div>
-            <div className="cmeta">Open Interview Q&amp;A →</div>
-          </div>
-        </div>
+          <Link className="tile" href="/interview-questions">
+            <span className="tile-eyebrow">Interview</span>
+            <span className="tile-title">Interview Q&amp;A</span>
+            <span className="tile-desc">Commonly asked {career.label} interview questions.</span>
+            <span className="row-go" aria-hidden="true">›</span>
+          </Link>
+        </Reveal>
 
-        {isJavaTrack ? (
-          <p style={{ marginTop: 32 }}>
-            <span className="sidebar-label" style={{ display: 'inline' }}>Also see: </span>
-            <Link className="concept-more" href="/algorithms">Algorithm List</Link>
-            {' · '}
-            <Link className="concept-more" href="/backend-topics">Backend Topics</Link>
-            {' · '}
-            <Link className="concept-more" href="/networking">Networking</Link>
-          </p>
+        {isJava ? (
+          <>
+            <h2 className="section-title">Reference</h2>
+            <Reveal className="tile-grid">
+              {REFERENCE.map((r) => (
+                <Link className="tile tile-sm" href={r.href} key={r.href}>
+                  <span className="tile-title">{r.title}</span>
+                  <span className="tile-desc">{r.desc}</span>
+                  <span className="row-go" aria-hidden="true">›</span>
+                </Link>
+              ))}
+            </Reveal>
+          </>
         ) : null}
-      </div>
-
-      <footer>Built for one engineer&rsquo;s climb — Meerut → production</footer>
+      </PageEnter>
     </>
   );
 }

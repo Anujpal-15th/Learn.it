@@ -1,0 +1,10 @@
+/* Space between the gates block and the two checklist columns (each column
+   starts with a .section-title, whose :first-child margin is 0). */
+.columns {
+  margin-top: 56px;
+}
+
+.empty {
+  font-size: 14px;
+  color: var(--mid);
+}

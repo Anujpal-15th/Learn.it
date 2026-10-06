@@ -1,0 +1,96 @@
+/* Career track segmented control (spec section 2). */
+
+.group {
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr; /* equal segments; 50/50 when stretched */
+  padding: 3px;
+  background: var(--paper2);
+  border: 1px solid var(--faint);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.md {
+  height: 36px;
+}
+
+.sm {
+  height: 32px;
+}
+
+.block {
+  display: grid;
+  width: 100%;
+}
+
+.seg {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 100%;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--mid);
+  font-family: var(--font-body), sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s var(--ease-ui);
+}
+
+.sm .seg {
+  padding: 0 12px;
+}
+
+.seg[data-hue='java'] {
+  --hue: var(--java);
+  --hue-soft: var(--java-soft);
+}
+
+.seg[data-hue='ai'] {
+  --hue: var(--ai);
+  --hue-soft: var(--ai-soft);
+}
+
+.seg:hover:not(:disabled) {
+  color: var(--ink);
+}
+
+.seg[aria-checked='true'],
+.seg[aria-checked='true']:hover {
+  color: var(--hue);
+}
+
+.seg:disabled {
+  cursor: default;
+}
+
+.pill {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: 3px;
+  background: var(--hue-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--hue) 35%, transparent);
+}
+
+.dot,
+.label {
+  position: relative;
+  z-index: 1;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--hue);
+  flex-shrink: 0;
+}

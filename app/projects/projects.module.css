@@ -1,0 +1,4 @@
+/* The capstone box is text-centred; centre its Mark complete button too. */
+.capstoneActions {
+  justify-content: center;
+}

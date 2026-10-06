@@ -7,8 +7,9 @@
 // index doesn't exist (orphaned topics), broken phase projects, malformed
 // resource links (missing label/url or an unparsable/non-http(s) URL),
 // malformed quiz questions (wrong option count, out-of-range correct index,
-// missing explanation, duplicate question text within a topic), and
-// job-readiness checklist items referencing topics that don't exist.
+// missing explanation, duplicate question text within a topic),
+// job-readiness checklist items referencing topics that don't exist, and any
+// site-search URL ("/?s=", "?q=", "/search?") anywhere in the content data.
 //
 // Exits 1 on any failure so this is CI/pre-deploy friendly.
 
@@ -16,6 +17,9 @@ import { CAREERS, ROADMAPS, READINESS_CHECKLIST } from '../lib/roadmaps.js';
 import { TOPIC_META, DIFFICULTY } from '../lib/roadmap-meta.js';
 import { INTERVIEW_CATEGORIES } from '../lib/interview-questions.js';
 import { INTERVIEW_CATEGORIES_AI } from '../lib/interview-questions-ai.js';
+import { ALGO_CATEGORIES } from '../lib/algorithms.js';
+import { BACKEND_CATEGORIES } from '../lib/backend-topics.js';
+import { NETWORKING_CATEGORIES } from '../lib/networking.js';
 
 const errors = [];
 const warnings = [];
@@ -126,10 +130,12 @@ CAREERS.forEach((career) => {
     }
   });
 
-  // Phase tier validity (curriculum refinement) — only checked where a
-  // roadmap actually uses tiers (currently java-developer only; AI Engineer's
-  // phases don't have this field and that's fine, it's not required).
-  const VALID_TIERS = new Set(['core-foundations', 'dsa', 'backend', 'production-advanced', 'system-design', 'optional']);
+  // Phase tier validity (curriculum refinement) — only checked where a phase
+  // declares a tier (both careers do; the field itself isn't required).
+  const VALID_TIERS = new Set([
+    'core-foundations', 'dsa', 'backend', 'production-advanced', 'system-design', 'optional',
+    'ai-foundations', 'classical-ml', 'deep-learning', 'nlp-genai', 'llm-apps', 'ai-production',
+  ]);
   roadmap.phases.forEach((phase, i) => {
     if (phase.tier !== undefined && !VALID_TIERS.has(phase.tier)) {
       fail(`[${career.id}] phase[${i}] "${phase.name}": invalid tier "${phase.tier}"`);
@@ -281,6 +287,30 @@ const interviewSlugs = new Set();
     });
   });
 });
+
+// --- No site-search links: every URL anywhere in the content data must be a
+// direct article. Walks every string (fields like url/u/source.url AND URLs
+// embedded in free text) so a search link can't creep back in anywhere.
+const SEARCH_URL = /\/\?s=|\?q=|\/search\?/;
+function checkNoSearchUrls(value, context) {
+  if (typeof value === 'string') {
+    (value.match(/https?:\/\/[^\s'"()<>]+/g) || []).forEach((url) => {
+      if (SEARCH_URL.test(url)) fail(`${context}: site-search URL is not allowed — "${url}"`);
+    });
+  } else if (value && typeof value === 'object') {
+    Object.values(value).forEach((v) => checkNoSearchUrls(v, context));
+  }
+}
+CAREERS.forEach((career) => checkNoSearchUrls(ROADMAPS[career.id], `[${career.id}] roadmap content`));
+checkNoSearchUrls(ALGO_CATEGORIES, 'algorithms');
+checkNoSearchUrls(BACKEND_CATEGORIES, 'backend-topics');
+checkNoSearchUrls(NETWORKING_CATEGORIES, 'networking');
+checkNoSearchUrls(INTERVIEW_CATEGORIES, 'interview-questions[java]');
+checkNoSearchUrls(INTERVIEW_CATEGORIES_AI, 'interview-questions[ai]');
+// Algorithm items must each carry their own direct link (algoLearnMore uses it).
+ALGO_CATEGORIES.forEach((cat) =>
+  cat.items.forEach((item) => checkResource({ label: item.src, url: item.url }, `algorithms "${item.slug}"`))
+);
 
 // --- Report ---
 console.log(`Checked ${allTopicIds.size} topics across ${CAREERS.length} roadmaps.`);

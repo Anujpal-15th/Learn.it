@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Logo from '@/components/Logo';
+import AppNav from '@/components/AppNav';
+import Reveal from '@/components/motion/Reveal';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -37,55 +38,56 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="auth-wrap">
-      <div className="auth-card">
-        <div className="auth-brand">
-          <Logo size={24} />
-          <span className="mark">Learn.it</span>
-          <span className="sub">Log in</span>
-        </div>
-        <h1 className="auth-title">Welcome back.</h1>
-        <p className="auth-lead">
-          Log in to pick up exactly where you left off.
-        </p>
-
-        <form onSubmit={handleSubmit} noValidate>
-          <div className="field">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              autoComplete="email"
-              required
-            />
+    <>
+      <AppNav minimal />
+      <main className="auth-wrap">
+        <Reveal className="auth-card">
+          <div className="auth-brand">
+            <span className="sub">Log in</span>
           </div>
-          <div className="field">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Your password"
-              autoComplete="current-password"
-              required
-            />
-          </div>
+          <h1 className="auth-title">Welcome back.</h1>
+          <p className="auth-lead">
+            Log in to pick up exactly where you left off.
+          </p>
 
-          <button className="btn-primary" type="submit" disabled={busy}>
-            {busy ? 'Signing in…' : 'Log in'}
-          </button>
-        </form>
+          <form onSubmit={handleSubmit} noValidate>
+            <div className="field">
+              <label htmlFor="email">Email</label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                autoComplete="email"
+                required
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Your password"
+                autoComplete="current-password"
+                required
+              />
+            </div>
 
-        {error ? <p className="auth-error">{error}</p> : null}
+            <button className="btn-primary" type="submit" disabled={busy}>
+              {busy ? 'Signing in…' : 'Log in'}
+            </button>
+          </form>
 
-        <p className="auth-alt">
-          No account yet? <Link href="/signup">Sign up</Link>
-        </p>
-      </div>
-    </div>
+          {error ? <p className="auth-error">{error}</p> : null}
+
+          <p className="auth-alt">
+            No account yet? <Link href="/signup">Sign up</Link>
+          </p>
+        </Reveal>
+      </main>
+    </>
   );
 }

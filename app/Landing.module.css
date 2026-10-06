@@ -1,0 +1,204 @@
+/* Public landing page (spec section 4). */
+
+.hero {
+  position: relative;
+  isolation: isolate; /* TrackBackground canvas sits at z-index -1 */
+  overflow: hidden;
+  min-height: clamp(520px, 78vh, 760px);
+  display: grid;
+  align-items: center;
+}
+
+.heroInner {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 48px 32px;
+}
+
+.copyStack {
+  display: grid;
+  max-width: 620px;
+}
+
+.copy {
+  grid-area: 1 / 1;
+}
+
+.title {
+  font-family: var(--font-display), serif;
+  font-style: italic;
+  font-weight: 600;
+  font-size: clamp(40px, 6vw, 80px);
+  line-height: 1.02;
+  letter-spacing: -0.5px;
+}
+
+.accent {
+  color: var(--accent);
+}
+
+.sub {
+  margin-top: 22px;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--mid);
+}
+
+.stats {
+  margin-top: 28px;
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  color: var(--mid);
+}
+
+.actions {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.note {
+  font-size: 13px;
+  color: var(--mid);
+}
+
+.section {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 72px 32px 0;
+}
+
+.sectionTitle {
+  font-family: var(--font-display), serif;
+  font-style: italic;
+  font-weight: 600;
+  font-size: 28px;
+  letter-spacing: -0.3px;
+  margin-bottom: 24px;
+}
+
+/* How it works: hairline 3-cell grid (same look as .career-grid). */
+.steps {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--faint);
+  border: 1px solid var(--faint);
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 28px 24px;
+  background: var(--paper2);
+}
+
+.stepNum,
+.num {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.stepName {
+  font-family: var(--font-display), serif;
+  font-style: italic;
+  font-weight: 600;
+  font-size: 21px;
+}
+
+.stepText {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--mid);
+}
+
+/* The path */
+.group + .group {
+  margin-top: 36px;
+}
+
+.groupTitle {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--mid);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--faint);
+}
+
+.items {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr;
+  column-gap: 40px;
+}
+
+.item {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--faint);
+  font-size: 15px;
+}
+
+.num {
+  min-width: 2ch;
+}
+
+.closing {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 96px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+}
+
+.closingLine {
+  font-family: var(--font-display), serif;
+  font-style: italic;
+  font-weight: 600;
+  font-size: 32px;
+  letter-spacing: -0.3px;
+}
+
+@media (min-width: 900px) {
+  .items {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .steps {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Phones: the background shows at the top (see .track-bg), so the copy
+   sits low in the hero. */
+@media (max-width: 640px) {
+  .hero {
+    align-items: end;
+  }
+  .heroInner {
+    padding: 120px 16px 48px;
+  }
+  .section {
+    padding: 56px 16px 0;
+  }
+  .closing {
+    padding: 72px 16px;
+  }
+}

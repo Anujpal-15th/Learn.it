@@ -2,82 +2,75 @@
 
 // Site search across both roadmaps: topics, subtopics, practice questions,
 // resources, and projects. Small static content set (a few thousand
-// entries) — a plain client-side substring/relevance filter is all this
+// entries), so a plain client-side substring/relevance filter is all this
 // needs, no search service or dependency.
 
 import { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { buildSearchIndex, searchContent } from '@/lib/roadmap-engine';
 import { useProgress } from '@/components/useProgress';
-import ThemeToggle from '@/components/ThemeToggle';
+import AppNav from '@/components/AppNav';
+import PageHeader from '@/components/PageHeader';
+import PageEnter from '@/components/motion/PageEnter';
+import styles from './search.module.css';
 
 export default function SearchPage() {
-  const router = useRouter();
-  const { loading } = useProgress();
+  const { user, meta, loading, setSelectedCareer } = useProgress();
   const [query, setQuery] = useState('');
   const index = useMemo(buildSearchIndex, []);
   const results = useMemo(() => searchContent(query, index), [query, index]);
 
   if (loading) {
     return (
-      <main className="boot">
-        <div className="eyebrow">Learn.it</div>
-        <p className="sub">Loading…</p>
-      </main>
+      <>
+        <AppNav loading />
+        <main className="page" aria-busy="true" />
+      </>
     );
   }
 
   return (
-    <div className="detail">
-      <div className="page-topbar">
-        <button className="back-btn" onClick={() => router.push('/dashboard')}>
-          ← Back to dashboard
-        </button>
-        <ThemeToggle />
-      </div>
+    <>
+      <AppNav user={user} careerId={meta.selectedCareer || null} active={null} onCareerChange={setSelectedCareer} />
 
-      <div className="detail-head">
-        <div className="detail-num mono">SEARCH</div>
-        <div className="detail-title">Find anything on Learn.it</div>
-        <div className="detail-sub">Search across topics, technologies, projects, resources, and practice questions.</div>
-      </div>
+      <PageEnter>
+        <PageHeader
+          eyebrow="Search"
+          title="Find anything"
+          sub="Topics, technologies, projects, resources and practice questions, across both tracks."
+        />
 
-      <input
-        className="search-input"
-        type="text"
-        placeholder="Try “HashMap”, “Spring Security”, “RAG”, “Transformers”…"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        autoFocus
-      />
+        <input
+          className="search-input"
+          type="text"
+          aria-label="Search Learn.it"
+          placeholder="Try “HashMap”, “Spring Security”, “RAG”, “Transformers”…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          autoFocus
+        />
 
-      <div style={{ marginTop: 20 }}>
-        {query && results.length === 0 ? (
-          <p className="hero-sub">No results for “{query}.”</p>
-        ) : (
-          results.map((r, i) => (
-            <a
-              key={i}
-              className="search-result"
-              href={r.url}
-              target={r.external ? '_blank' : undefined}
-              rel={r.external ? 'noopener noreferrer' : undefined}
-              onClick={(e) => {
-                if (!r.external) {
-                  e.preventDefault();
-                  router.push(r.url);
-                }
-              }}
-            >
+        <p className={'meta-line ' + styles.count} aria-live="polite">
+          {query ? (results.length ? `${results.length} result${results.length === 1 ? '' : 's'}` : `No results for “${query}”.`) : ''}
+        </p>
+
+        <div>
+          {results.map((r, i) => (
+            // Every result opens its in-app page (questions and resources
+            // live on their topic page, where they can be checked off).
+            <Link key={i} className="search-result" href={r.url}>
               <span className="search-result-type">{r.type}</span>
-              <span>
+              <div>
                 <div className="search-result-title">{r.title}</div>
-                <div className="search-result-subtitle">{r.career} · {r.subtitle}</div>
-              </span>
-            </a>
-          ))
-        )}
-      </div>
-    </div>
+                <div className="search-result-subtitle">
+                  {r.career} · {r.subtitle}
+                </div>
+              </div>
+              <span className="row-go" aria-hidden="true">›</span>
+            </Link>
+          ))}
+        </div>
+      </PageEnter>
+    </>
   );
 }
