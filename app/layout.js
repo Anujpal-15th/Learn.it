@@ -42,7 +42,7 @@ const themeInitScript = `
 (function() {
   try {
     var saved = localStorage.getItem('ledger-theme');
-    var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    var theme = saved === 'dark' ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', theme);
     var t = localStorage.getItem('learnit-track');
     document.documentElement.setAttribute('data-track', t === 'ai-engineer' ? 'ai-engineer' : 'java-developer');
